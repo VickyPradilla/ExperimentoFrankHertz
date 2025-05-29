@@ -1,78 +1,147 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Experimento de Franck y Hertz</title>
-  <style>
-    /* Reset de márgenes y padding */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experimento de Franck y Hertz</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    body {
-      font-family: Arial, sans-serif;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #1e1b4b, #1e40af, #2563eb);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem;
-    }
+        body {
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e1b4b, #1e40af, #2563eb);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
 
-    /* Título más compacto y adaptable */
-    .title {
-      font-size: clamp(2.5rem, 6vw, 4.5rem);
-      font-weight: bold;
-      color: #a3e635;
-      text-align: center;
-      margin-bottom: 2.5rem;
-      line-height: 1.2;
-    }
+        .title {
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: bold;
+            color: #a3e635;
+            text-align: center;
+            margin-bottom: 4rem;
+            line-height: 1.1;
+        }
 
-    /* Contenedor de botones con espacio entre ellos */
-    .buttons-container {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-      align-items: center;
-    }
+        .buttons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
 
-    /* Estilo de botón */
-    .nav-button {
-      background-color: white;
-      color: black;
-      font-size: 1rem;
-      padding: 1rem 1.5rem;
-      border: none;
-      border-radius: 2rem;
-      min-width: 220px;
-      cursor: pointer;
-      text-decoration: none;
-      text-align: center;
-      transition: all 0.3s ease;
-      box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
-    }
+        .nav-button {
+            background-color: white;
+            color: black;
+            font-size: 1.25rem;
+            padding: 1.5rem 2rem;
+            border: none;
+            border-radius: 50px;
+            min-width: 300px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
 
-    .nav-button:hover {
-      background-color: #f3f4f6;
-      transform: translateY(-2px);
-    }
+        .nav-button:hover {
+            background-color: #f3f4f6;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
 
-    /* Contenedor del diagrama */
-    .diagram-container {
-      background-color: #4ade80;
-      border-radius: 1rem;
-      padding: 1rem;
-      max-width: 500px;
-      width: 90%;
-    }
+        .diagram-container {
+            background-color: #4ade80;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            max-width: 600px;
+            width: 100%;
+        }
 
-    .diagram-inner {
-      background-color: #f3f4f6;
-      border-radius: 0.75
+        .diagram-inner {
+            background-color: #f3f4f6;
+            border-radius: 1rem;
+            padding: 1rem;
+        }
+
+        .diagram-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        @media (min-width: 768px) {
+            .buttons-container {
+                flex-direction: row;
+                gap: 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-button {
+                min-width: 250px;
+                font-size: 1.1rem;
+                padding: 1.25rem 1.5rem;
+            }
+            
+            .title {
+                margin-bottom: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Title -->
+    <h1 class="title">
+        Experimento de<br>
+        Franck y Hertz
+    </h1>
+
+    <!-- Navigation Buttons -->
+    <div class="buttons-container">
+        <a href="teoria.html" class="nav-button">
+            > Contame la teoría
+        </a>
+        <a href="simulador.html" class="nav-button">
+            > Directo al simulador
+        </a>
+    </div>
+
+    <!-- Diagram Container -->
+    <div class="diagram-container">
+        <div class="diagram-inner">
+            <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/franck-hertz-DYx4eTmoiIYJO0kHpKSEtUGHtdtxqh.png" 
+                 alt="Diagrama del experimento de Franck y Hertz mostrando el setup experimental con cátodo, vapor de mercurio, grade y placa coletora" 
+                 class="diagram-image">
+        </div>
+    </div>
+
+    <script>
+        // Add smooth scrolling and interaction effects
+        document.addEventListener('DOMContentLoaded', function() {
+            const buttons = document.querySelectorAll('.nav-button');
+            
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    // Add a small animation effect when clicking
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
 
