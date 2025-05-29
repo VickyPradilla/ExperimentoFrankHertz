@@ -1,1 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- Configuración básica de la página -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Evita que el navegador cambie colores en modo oscuro automáticamente -->
+  <meta name="color-scheme" content="only light">
+  <title>Teoría - Experimento de Franck y Hertz</title>
+
+  <!-- Estilos CSS embebidos -->
+  <style>
+    /* Reset básico de márgenes y comportamiento de cajas */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* Estilo general del cuerpo de la página */
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #1e1b4b, #1e40af, #2563eb); /* Fondo degradado azul */
+      color: #ffffff; /* Color de texto base (fuera del contenedor blanco) */
+      padding: 2rem;
+      line-height: 1.6;
+    }
+
+    /* Contenedor principal del contenido */
+    .container {
+      max-width: 800px;
+      margin: 4rem auto 2rem; /* Centrado con separación desde arriba */
+      background-color: #ffffff; /* Fondo blanco dentro del contenedor */
+      color: #000000; /* Texto en negro dentro del contenedor */
+      border-radius: 1rem;
+      padding: 2rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Sombra suave */
+    }
+
+    /* Títulos principales */
+    h1, h2 {
+      color: #a3e635; /* Verde lima (igual que en index) */
+      text-align: center;
+      margin-bottom: 1.5rem;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2); /* Sombra sutil para destacar */
+    }
+
+    /* Subtítulos con separación adicional arriba */
+    h2 {
+      margin-top: 2.5rem;
+    }
+
+    /* Imagen central (gráfico) */
+    img {
+      width: 100%;
+      max-width: 600px;
+      margin: 2rem auto;
+      display: block;
+      border-radius: 1rem;
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15); /* Sombra al gráfico */
+    }
+
+    /* Botones de navegación al final */
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+
+    /* Estilo de botones */
+    .nav-button {
+      background-color: #ffffff;
+      color: #000000;
+      font-size: 1.2rem;
+      padding: 1rem 2.5rem;
+      border: none;
+      border-radius: 50px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Efecto al pasar el mouse por los botones */
+    .nav-button:hover {
+      background-color: #f3f4f6;
+      transform: translateY(-2px);
+    }
+
+    /* Adaptación para pantallas pequeñas */
+    @media (max-width: 600px) {
+      .container {
+        padding: 1.5rem;
+      }
+
+      .nav-button {
+        padding: 0.8rem 2rem;
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Contenido principal en un contenedor blanco -->
+  <div class="container">
+
+    <!-- Título principal de la página -->
+    <h1>Teoría del Experimento de Franck y Hertz</h1>
+
+    <!-- Breve contexto histórico -->
+    <p><strong>Contexto histórico:</strong> En 1914, James Franck y Gustav Hertz realizaron un experimento fundamental para la física cuántica. Confirmaron que los átomos solo pueden absorber energía en cantidades discretas, apoyando el modelo de Bohr. Este hallazgo les valió el Premio Nobel en 1925.</p>
+
+    <!-- Explicación general del experimento -->
+    <h2>¿En qué consiste el experimento?</h2>
+    <p>El experimento de Franck y Hertz consiste en un tubo de vidrio lleno de vapor de mercurio, donde se acelera un haz de electrones desde un cátodo hacia un ánodo a través de un potencial eléctrico. Los electrones pueden perder energía al colisionar con los átomos de mercurio si su energía es suficiente para excitarlos, lo que se detecta como una caída en la corriente medida en la placa colectora.</p>
+
+    <!-- Variables experimentales -->
+    <h2>Variables del experimento</h2>
+    <ul>
+      <li><strong>Potencial acelerador:</strong> Controla la energía cinética de los electrones.</li>
+      <li><strong>Gas dentro del tubo:</strong> Generalmente vapor de mercurio, que tiene niveles de energía bien definidos.</li>
+      <li><strong>Cátodo:</strong> Emite electrones mediante calentamiento.</li>
+      <li><strong>Ánodo o rejilla:</strong> Acelera los electrones hacia la placa colectora.</li>
+      <li><strong>Placa colectora:</strong> Mide la corriente que depende de cuántos electrones llegan sin colisiones inelásticas.</li>
+    </ul>
+
+    <!-- Gráfico de intensidad -->
+    <h2>Gráfico clásico de intensidad vs. voltaje</h2>
+
+    <!-- Imagen del gráfico subida a Vercel Blob -->
+    <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/corrienteVSvoltaje-FH-ZCWjPp9QwQqTzWhBRxfixHHw9MEchv.png" 
+         alt="Gráfico de corriente vs voltaje del experimento de Franck y Hertz">
+
+    <!-- Explicación del gráfico -->
+    <p>Este gráfico muestra cómo la corriente medida en el colector no aumenta de forma continua. Cada vez que los electrones alcanzan una energía de 4.9 eV (la energía necesaria para excitar un átomo de mercurio), ocurre una colisión inelástica y la corriente cae bruscamente. Estos picos periódicos son evidencia de que los átomos tienen niveles de energía cuantizados.</p>
+
+    <!-- Botones de navegación -->
+    <div class="buttons">
+      <a href="index.html" class="nav-button">Volver</a>
+      <a href="simulador.html" class="nav-button">Ir al simulador</a>
+    </div>
+
+  </div>
+
+</body>
+</html>
 
