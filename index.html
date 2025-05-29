@@ -22,4 +22,123 @@
             flex-direction: column;
             align-items: center;
             justify-content: flex-start; /* Sitúa los elementos desde arriba */
+            gap: 2rem; /* Espacio entre secciones */
+        }
+
+        /* Título principal */
+        .title {
+            font-size: clamp(2rem, 5vw, 3rem); /* Tamaño que se adapta al ancho de pantalla */
+            color: #a3e635; /* Verde lima */
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* Contenedor de botones */
+        .buttons-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        /* Botones de navegación */
+        .nav-button {
+            background-color: white;
+            color: black;
+            font-size: 1rem;
+            padding: 0.75rem 1.25rem;
+            border: none;
+            border-radius: 50px;
+            min-width: 200px;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Efecto al pasar el mouse por encima */
+        .nav-button:hover {
+            background-color: #f3f4f6;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Contenedor del diagrama */
+        .diagram-container {
+            background-color: #4ade80; /* Verde claro */
+            border-radius: 1rem;
+            padding: 1rem;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        /* Fondo del diagrama */
+        .diagram-inner {
+            background-color: #f3f4f6;
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+        }
+
+        /* Imagen del diagrama */
+        .diagram-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Ajustes para pantallas pequeñas (celulares) */
+        @media (max-width: 600px) {
+            .nav-button {
+                min-width: 160px;
+                font-size: 0.9rem;
+                padding: 0.5rem 1rem;
+            }
+
+            .diagram-container {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Título de la página -->
+    <h1 class="title">Experimento de<br>Franck y Hertz</h1>
+
+    <!-- Botones de navegación -->
+    <div class="buttons-container">
+        <a href="teoria.html" class="nav-button">> Contame la teoría</a>
+        <a href="simulador.html" class="nav-button">> Directo al simulador</a>
+    </div>
+
+    <!-- Diagrama del experimento -->
+    <div class="diagram-container">
+        <div class="diagram-inner">
+            <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/franck-hertz-DYx4eTmoiIYJO0kHpKSEtUGHtdtxqh.png" 
+                 alt="Diagrama del experimento de Franck y Hertz" 
+                 class="diagram-image">
+        </div>
+    </div>
+
+    <script>
+        // Espera a que la página cargue
+        document.addEventListener('DOMContentLoaded', function () {
+            // Selecciona todos los botones
+            const buttons = document.querySelectorAll('.nav-button');
+
+            // Agrega animación al hacer clic
+            buttons.forEach(button => {
+                button.addEventListener('click', function () {
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
 
