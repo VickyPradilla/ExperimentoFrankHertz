@@ -20,31 +20,40 @@
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      text-align: center;
-      gap: 2rem;
+    }
+
+    .main-content {
+      margin-top: 4rem; /* Baja todo el contenido */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3rem; /* Mayor separación entre secciones */
+      width: 100%;
     }
 
     .title {
-      font-size: clamp(2.5rem, 6vw, 4rem); /* Adaptable */
+      font-size: clamp(3rem, 7vw, 4.5rem);
       color: #a3e635;
       font-weight: bold;
+      text-align: center;
+      text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3); /* Sombra sutil */
     }
 
     .buttons-container {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 1.25rem;
+      gap: 2rem;
     }
 
     .nav-button {
       background-color: white;
       color: black;
-      font-size: 1.25rem; /* Más grande */
-      padding: 1.25rem 2.5rem; /* Más padding */
+      font-size: 1.4rem; /* Más grande */
+      padding: 1.5rem 3rem; /* Más padding */
       border: none;
       border-radius: 50px;
-      min-width: 240px;
+      min-width: 260px;
       text-align: center;
       text-decoration: none;
       cursor: pointer;
@@ -64,7 +73,6 @@
       padding: 1rem;
       max-width: 400px;
       width: 100%;
-      margin-top: 2.5rem; /* Imagen más baja */
     }
 
     .diagram-inner {
@@ -82,36 +90,43 @@
 
     @media (max-width: 600px) {
       .nav-button {
-        min-width: 180px;
-        font-size: 1.05rem;
-        padding: 1rem 1.5rem;
+        min-width: 200px;
+        font-size: 1.1rem;
+        padding: 1rem 2rem;
       }
 
       .diagram-container {
         max-width: 90%;
+      }
+
+      .main-content {
+        margin-top: 2rem;
+        gap: 2rem;
       }
     }
   </style>
 </head>
 <body>
 
-  <!-- Título principal en una sola línea -->
-  <h1 class="title">Experimento de Franck y Hertz</h1>
+  <div class="main-content">
+    <!-- Título principal -->
+    <h1 class="title">Experimento de Franck y Hertz</h1>
 
-  <!-- Botones de navegación -->
-  <div class="buttons-container">
-    <a href="teoria.html" class="nav-button">&gt; Contame la teoría</a>
-    <a href="simulador.html" class="nav-button">&gt; Directo al simulador</a>
-  </div>
+    <!-- Botones de navegación -->
+    <div class="buttons-container">
+      <a href="teoria.html" class="nav-button">&gt; Contame la teoría</a>
+      <a href="simulador.html" class="nav-button">&gt; Directo al simulador</a>
+    </div>
 
-  <!-- Imagen del experimento -->
-  <div class="diagram-container">
-    <div class="diagram-inner">
-      <img
-        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/franck-hertz-DYx4eTmoiIYJO0kHpKSEtUGHtdtxqh.png"
-        alt="Diagrama del experimento de Franck y Hertz"
-        class="diagram-image"
-      />
+    <!-- Imagen del experimento -->
+    <div class="diagram-container">
+      <div class="diagram-inner">
+        <img
+          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/franck-hertz-DYx4eTmoiIYJO0kHpKSEtUGHtdtxqh.png"
+          alt="Diagrama del experimento de Franck y Hertz"
+          class="diagram-image"
+        />
+      </div>
     </div>
   </div>
 
@@ -131,6 +146,7 @@
 
 </body>
 </html>
+
 
 
 
