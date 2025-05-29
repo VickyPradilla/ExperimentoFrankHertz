@@ -1,174 +1,25 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <!-- Configuración básica del documento -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Experimento de Franck y Hertz</title>
     <style>
-        /* Reset básico para eliminar márgenes y padding por defecto */
+        /* Reinicia márgenes y paddings por defecto del navegador */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        /* Estilos del cuerpo principal de la página */
+        /* Estilo general de la página */
         body {
-            font-family: 'Arial', sans-serif;
-            min-height: 100vh; /* Altura mínima de toda la ventana */
-            /* Gradiente de fondo en tonos azules */
-            background: linear-gradient(135deg, #1e1b4b, #1e40af, #2563eb);
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e1b4b, #1e40af, #2563eb); /* Fondo azul degradado */
+            min-height: 100vh; /* Altura completa de la ventana */
+            padding: 2rem;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 1rem; /* Reducido de 2rem a 1rem */
-        }
-
-        /* Estilos del título principal */
-        .title {
-            font-size: clamp(2rem, 6vw, 4rem); /* Reducido el tamaño del título */
-            font-weight: bold;
-            color: #a3e635; /* Color verde-amarillento */
-            text-align: center;
-            margin-bottom: 2rem; /* Reducido de 4rem a 2rem */
-            line-height: 1.1;
-        }
-
-        /* Contenedor de los botones de navegación */
-        .buttons-container {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem; /* Reducido de 2rem a 1.5rem */
-            margin-bottom: 2rem; /* Reducido de 3rem a 2rem */
-        }
-
-        /* Estilos de los botones de navegación */
-        .nav-button {
-            background-color: white;
-            color: black;
-            font-size: 1rem; /* Reducido de 1.25rem a 1rem */
-            padding: 1rem 1.5rem; /* Reducido el padding */
-            border: none;
-            border-radius: 50px; /* Bordes redondeados */
-            min-width: 250px; /* Reducido de 300px a 250px */
-            cursor: pointer; /* Cursor de mano al pasar por encima */
-            text-decoration: none; /* Quita el subrayado del enlace */
-            display: inline-block;
-            text-align: center;
-            /* Transición suave para efectos hover */
-            transition: all 0.3s ease;
-            /* Sombra sutil */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Efectos cuando el mouse pasa por encima del botón */
-        .nav-button:hover {
-            background-color: #f3f4f6; /* Color ligeramente más oscuro */
-            transform: translateY(-2px); /* Eleva el botón */
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Sombra más pronunciada */
-        }
-
-        /* Contenedor principal del diagrama */
-        .diagram-container {
-            background-color: #4ade80; /* Color verde */
-            border-radius: 1.5rem; /* Bordes redondeados */
-            padding: 1rem; /* Reducido de 1.5rem a 1rem */
-            max-width: 500px; /* Reducido de 600px a 500px */
-            width: 100%;
-        }
-
-        /* Contenedor interno del diagrama */
-        .diagram-inner {
-            background-color: #f3f4f6; /* Color gris claro */
-            border-radius: 1rem;
-            padding: 0.75rem; /* Reducido de 1rem a 0.75rem */
-        }
-
-        /* Estilos de la imagen del diagrama */
-        .diagram-image {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        /* Estilos para pantallas medianas y grandes (tablets y desktop) */
-        @media (min-width: 768px) {
-            .buttons-container {
-                flex-direction: row; /* Botones en fila horizontal */
-                gap: 1.5rem;
-            }
-        }
-
-        /* Estilos para pantallas pequeñas (móviles) */
-        @media (max-width: 480px) {
-            .nav-button {
-                min-width: 200px; /* Reducido para móviles */
-                font-size: 0.9rem; /* Texto más pequeño */
-                padding: 0.875rem 1.25rem; /* Padding más pequeño */
-            }
-            
-            .title {
-                margin-bottom: 1.5rem; /* Menos espacio en móviles */
-            }
-
-            .diagram-container {
-                max-width: 100%; /* Usa todo el ancho disponible */
-                margin: 0 0.5rem; /* Márgenes laterales pequeños */
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- Título principal de la página -->
-    <h1 class="title">
-        Experimento de<br>
-        Franck y Hertz
-    </h1>
-
-    <!-- Contenedor de los botones de navegación -->
-    <div class="buttons-container">
-        <!-- Botón que lleva a la página de teoría -->
-        <a href="teoria.html" class="nav-button">
-            > Contame la teoría
-        </a>
-        <!-- Botón que lleva a la página del simulador -->
-        <a href="simulador.html" class="nav-button">
-            > Directo al simulador
-        </a>
-    </div>
-
-    <!-- Contenedor del diagrama del experimento -->
-    <div class="diagram-container">
-        <div class="diagram-inner">
-            <!-- Imagen del diagrama de Franck-Hertz -->
-            <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/franck-hertz-DYx4eTmoiIYJO0kHpKSEtUGHtdtxqh.png" 
-                 alt="Diagrama del experimento de Franck y Hertz mostrando el setup experimental con cátodo, vapor de mercurio, grade y placa coletora" 
-                 class="diagram-image">
-        </div>
-    </div>
-
-    <script>
-        // JavaScript que se ejecuta cuando la página termina de cargar
-        document.addEventListener('DOMContentLoaded', function() {
-            // Selecciona todos los botones de navegación
-            const buttons = document.querySelectorAll('.nav-button');
-            
-            // Agrega un efecto de animación a cada botón cuando se hace clic
-            buttons.forEach(button => {
-                button.addEventListener('click', function(e) {
-                    // Efecto de "presionar" el botón (se hace más pequeño)
-                    this.style.transform = 'scale(0.95)';
-                    
-                    // Después de 150ms, vuelve al tamaño normal
-                    setTimeout(() => {
-                        this.style.transform = '';
-                    }, 150);
-                });
-            });
-        });
-    </script>
-</body>
-</html>
+            justify-content: flex-start; /* Sitúa los elementos desde arriba */
 
