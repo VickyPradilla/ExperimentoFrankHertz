@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aparato Acelerador de Electrones</title>
+    <title>Experimento de Franck-Hertz</title>
     <style>
         body {
             margin: 0;
@@ -44,6 +44,17 @@
             border-radius: 60px;
             border: 3px solid #8fa025;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .mercury-vapor {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(200, 200, 255, 0.1);
+            border-radius: 57px;
         }
 
         .cathode {
@@ -68,6 +79,15 @@
             color: #d32f2f;
         }
 
+        .cathode-label {
+            position: absolute;
+            left: 20px;
+            top: 200px;
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+        }
+
         .anode {
             position: absolute;
             right: 20px;
@@ -90,13 +110,21 @@
             color: #1976d2;
         }
 
+        .anode-label {
+            position: absolute;
+            right: 20px;
+            top: 200px;
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+        }
+
         .grid {
             position: absolute;
-            left: 50%;
+            right: 120px;
             top: 60px;
             width: 6px;
             height: 100px;
-            transform: translateX(-50%);
             background: #2c5aa0;
             z-index: 10;
         }
@@ -118,10 +146,39 @@
             background-size: 4px 4px;
         }
 
+        .grid-label {
+            position: absolute;
+            right: 100px;
+            top: 200px;
+            font-weight: bold;
+            color: #333;
+            font-size: 12px;
+        }
+
+        .collector {
+            position: absolute;
+            right: 70px;
+            top: 40px;
+            width: 25px;
+            height: 140px;
+            background: #696969;
+            border-radius: 3px;
+            border: 2px solid #555;
+        }
+
+        .collector-label {
+            position: absolute;
+            right: 45px;
+            top: 200px;
+            font-weight: bold;
+            color: #333;
+            font-size: 12px;
+        }
+
         .electron {
             position: absolute;
-            width: 14px;
-            height: 14px;
+            width: 12px;
+            height: 12px;
             background: radial-gradient(circle, #4a90e2, #2c5aa0);
             border-radius: 50%;
             box-shadow: 0 0 8px rgba(74, 144, 226, 0.6);
@@ -134,9 +191,24 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 10px;
+            font-size: 8px;
             font-weight: bold;
             color: white;
+        }
+
+        .excited-atom {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, #ff6b35, #ff4500);
+            border-radius: 50%;
+            animation: glow 0.5s ease-out;
+            z-index: 3;
+        }
+
+        @keyframes glow {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
         }
 
         .voltage-source {
@@ -271,26 +343,68 @@
             font-weight: bold;
             color: #333;
         }
+
+        .franck-hertz-graph {
+            background: white;
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px;
+            width: 400px;
+            height: 200px;
+            position: relative;
+        }
+
+        .graph-title {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .excitation-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ff6b35;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .excitation-indicator.active {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Aparato Acelerador de Electrones</h1>
-        <p>Simulación de aceleración de electrones mediante diferencia de potencial</p>
+        <h1>Experimento de Franck-Hertz</h1>
+        <p>Demostración de la cuantización de energía atómica (Hg: 4.9 eV)</p>
     </div>
 
     <div class="apparatus-container">
-        <div class="tube" id="tube"></div>
+        <div class="tube" id="tube">
+            <div class="mercury-vapor"></div>
+        </div>
         <div class="cathode"></div>
+        <div class="cathode-label">CÁTODO</div>
         <div class="anode"></div>
+        <div class="anode-label">ÁNODO</div>
         <div class="grid"></div>
+        <div class="grid-label">Rejilla</div>
+        <div class="collector"></div>
+        <div class="collector-label">Colector</div>
         <div class="voltage-source">
             <span id="voltageSourceDisplay">0V</span>
         </div>
         <div class="wire-left"></div>
         <div class="wire-right"></div>
         <div class="ammeter">A</div>
-        <div class="apparatus-label">Accelerating Apparatus</div>
+        <div class="apparatus-label">Experimento de Franck-Hertz</div>
+        <div class="excitation-indicator" id="excitationIndicator">¡Excitación de Hg!</div>
     </div>
 
     <div class="controls">
@@ -300,23 +414,29 @@
     </div>
 
     <div class="voltage-control">
-        <label for="voltageRange">Potencial Acelerador:</label>
-        <input type="range" id="voltageRange" min="0" max="40" value="0" step="1" onchange="updateVoltage(this.value)">
-        <div class="voltage-display" id="voltageDisplay">0 V</div>
-        <div class="current-display" id="currentDisplay">Corriente: 0.0 mA</div>
+        <label for="voltageRange">Voltaje Acelerador:</label>
+        <input type="range" id="voltageRange" min="0" max="40" value="0" step="0.1" onchange="updateVoltage(this.value)">
+        <div class="voltage-display" id="voltageDisplay">0.0 V</div>
+        <div class="current-display" id="currentDisplay">Corriente: 0.00 mA</div>
+        <div class="current-display" id="energyDisplay">Energía electrones: 0.0 eV</div>
+    </div>
+
+    <div class="franck-hertz-graph">
+        <div class="graph-title">Corriente vs Voltaje (Curva de Franck-Hertz)</div>
+        <canvas id="graph" width="360" height="140"></canvas>
     </div>
 
     <div class="info-panel">
-        <h3>Funcionamiento del Aparato:</h3>
+        <h3>Experimento de Franck-Hertz (1914):</h3>
         <ul>
-            <li><strong>Cátodo (−):</strong> Emite electrones cuando se aplica voltaje</li>
-            <li><strong>Rejilla:</strong> Controla el flujo de electrones</li>
-            <li><strong>Ánodo (+):</strong> Atrae los electrones acelerados</li>
-            <li><strong>Voltaje:</strong> A mayor voltaje, mayor velocidad de electrones</li>
-            <li><strong>Corriente:</strong> Proporcional al número de electrones por segundo</li>
+            <li><strong>Objetivo:</strong> Demostrar la cuantización de energía atómica</li>
+            <li><strong>Gas:</strong> Vapor de mercurio (Hg)</li>
+            <li><strong>Energía de excitación:</strong> 4.9 eV</li>
+            <li><strong>Observación:</strong> La corriente cae cada 4.9 V debido a colisiones inelásticas</li>
+            <li><strong>Significado:</strong> Los electrones pierden energía al excitar átomos de Hg</li>
         </ul>
-        <p><strong>Ecuación:</strong> Energía cinética = ½mv² = eV</p>
-        <p>Donde e = carga del electrón, V = voltaje aplicado</p>
+        <p><strong>Ecuación:</strong> E = eV (energía cinética del electrón)</p>
+        <p>Cuando E ≥ 4.9 eV, ocurre excitación atómica y la corriente disminuye</p>
     </div>
 
     <script>
@@ -324,7 +444,13 @@
         let isRunning = false;
         let voltage = 0;
         let electronId = 0;
-        let electronCreationRate = 0;
+        let currentMeasurement = 0;
+        let graphData = [];
+        let excitedAtoms = [];
+
+        // Constantes del experimento
+        const MERCURY_EXCITATION_ENERGY = 4.9; // eV
+        const ELECTRON_CHARGE = 1.602e-19; // Coulombs
 
         function createElectron() {
             if (voltage === 0) return;
@@ -334,36 +460,57 @@
             electron.className = 'electron';
             electron.id = `electron-${electronId++}`;
             
-            // Posición inicial en el cátodo
-            const startX = 70;
-            const startY = Math.random() * 60 + 80; // Dentro del tubo
+            // Posición inicial dentro del tubo, cerca del cátodo
+            const startX = 80;
+            const startY = Math.random() * 80 + 70; // Dentro del tubo
             
             electron.style.left = startX + 'px';
             electron.style.top = startY + 'px';
             
             tube.appendChild(electron);
             
-            // Velocidad basada en el voltaje (ecuación de energía cinética)
-            const baseSpeed = Math.sqrt(voltage) * 0.8; // Velocidad proporcional a √V
+            // Energía cinética basada en el voltaje
+            const kineticEnergy = voltage; // eV
+            const baseSpeed = Math.sqrt(kineticEnergy) * 1.2;
             
             electrons.push({
                 element: electron,
                 x: startX,
                 y: startY,
                 vx: baseSpeed,
-                vy: (Math.random() - 0.5) * 0.5 // Pequeña componente vertical
+                vy: (Math.random() - 0.5) * 0.3,
+                energy: kineticEnergy,
+                hasExcited: false
             });
+        }
+
+        function createExcitedAtom(x, y) {
+            const tube = document.getElementById('tube');
+            const atom = document.createElement('div');
+            atom.className = 'excited-atom';
+            atom.style.left = x + 'px';
+            atom.style.top = y + 'px';
+            tube.appendChild(atom);
+            
+            // Remover después de la animación
+            setTimeout(() => {
+                if (atom.parentNode) {
+                    tube.removeChild(atom);
+                }
+            }, 500);
+            
+            // Mostrar indicador de excitación
+            const indicator = document.getElementById('excitationIndicator');
+            indicator.classList.add('active');
+            setTimeout(() => {
+                indicator.classList.remove('active');
+            }, 300);
         }
 
         function startSimulation() {
             isRunning = true;
             animateElectrons();
-            
-            // Crear electrones basado en el voltaje
-            if (voltage > 0) {
-                electronCreationRate = voltage * 50; // Más voltaje = más electrones
-                createElectronsPeriodically();
-            }
+            createElectronsPeriodically();
         }
 
         function stopSimulation() {
@@ -382,26 +529,46 @@
             
             electrons = [];
             electronId = 0;
+            currentMeasurement = 0;
+            graphData = [];
             updateCurrentDisplay();
+            clearGraph();
         }
 
         function updateVoltage(value) {
-            voltage = parseInt(value);
-            document.getElementById('voltageDisplay').textContent = voltage + ' V';
-            document.getElementById('voltageSourceDisplay').textContent = voltage + 'V';
+            voltage = parseFloat(value);
+            document.getElementById('voltageDisplay').textContent = voltage.toFixed(1) + ' V';
+            document.getElementById('voltageSourceDisplay').textContent = voltage.toFixed(1) + 'V';
+            document.getElementById('energyDisplay').textContent = `Energía electrones: ${voltage.toFixed(1)} eV`;
             
-            // Actualizar velocidad de electrones existentes
-            electrons.forEach(electron => {
-                electron.vx = Math.sqrt(voltage) * 0.8;
-            });
+            calculateFranckHertzCurrent();
+            updateGraph();
+        }
+
+        function calculateFranckHertzCurrent() {
+            // Calcular corriente según el efecto Franck-Hertz
+            let baseCurrent = voltage * 0.1; // Corriente base proporcional al voltaje
             
+            // Reducir corriente en múltiplos de 4.9 eV
+            const excitationLevels = Math.floor(voltage / MERCURY_EXCITATION_ENERGY);
+            
+            if (excitationLevels > 0) {
+                // Cada nivel de excitación reduce la corriente
+                const reductionFactor = Math.exp(-excitationLevels * 0.8);
+                baseCurrent *= reductionFactor;
+                
+                // Agregar oscilaciones características
+                const oscillation = Math.sin((voltage / MERCURY_EXCITATION_ENERGY) * Math.PI) * 0.1;
+                baseCurrent += oscillation;
+            }
+            
+            currentMeasurement = Math.max(0, baseCurrent);
             updateCurrentDisplay();
         }
 
         function updateCurrentDisplay() {
-            // Corriente proporcional al voltaje y número de electrones
-            const current = voltage > 0 ? (voltage * 0.25).toFixed(1) : '0.0';
-            document.getElementById('currentDisplay').textContent = `Corriente: ${current} mA`;
+            document.getElementById('currentDisplay').textContent = 
+                `Corriente: ${currentMeasurement.toFixed(2)} mA`;
         }
 
         function createElectronsPeriodically() {
@@ -409,8 +576,7 @@
             
             createElectron();
             
-            // Intervalo basado en el voltaje
-            const interval = Math.max(100, 1000 - voltage * 20);
+            const interval = Math.max(200, 800 - voltage * 15);
             setTimeout(createElectronsPeriodically, interval);
         }
 
@@ -423,12 +589,33 @@
                 electron.y += electron.vy;
                 
                 // Mantener dentro del tubo verticalmente
-                if (electron.y < 80) electron.y = 80;
-                if (electron.y > 140) electron.y = 140;
+                if (electron.y < 70) {
+                    electron.y = 70;
+                    electron.vy = Math.abs(electron.vy);
+                }
+                if (electron.y > 150) {
+                    electron.y = 150;
+                    electron.vy = -Math.abs(electron.vy);
+                }
                 
-                // Efecto de aceleración al pasar por la rejilla
-                if (electron.x > 340 && electron.x < 360) {
-                    electron.vx *= 1.1; // Aceleración
+                // Verificar colisión inelástica con átomos de mercurio
+                if (!electron.hasExcited && electron.energy >= MERCURY_EXCITATION_ENERGY) {
+                    // Probabilidad de colisión inelástica
+                    if (Math.random() < 0.02) {
+                        electron.hasExcited = true;
+                        electron.energy -= MERCURY_EXCITATION_ENERGY;
+                        electron.vx *= 0.3; // Reducir velocidad drásticamente
+                        
+                        // Crear átomo excitado
+                        createExcitedAtom(electron.x, electron.y);
+                        
+                        // Cambiar apariencia del electrón
+                        electron.element.style.background = 'radial-gradient(circle, #ff6b35, #d32f2f)';
+                    }
+                }
+                
+                // Efecto al pasar por la rejilla
+                if (electron.x > 520 && electron.x < 540) {
                     electron.element.style.boxShadow = '0 0 15px rgba(74, 144, 226, 1)';
                 }
                 
@@ -436,8 +623,8 @@
                 electron.element.style.left = electron.x + 'px';
                 electron.element.style.top = electron.y + 'px';
                 
-                // Remover electrones que salen del tubo
-                if (electron.x > 620) {
+                // Remover electrones que llegan al colector
+                if (electron.x > 580) {
                     if (electron.element.parentNode) {
                         electron.element.parentNode.removeChild(electron.element);
                     }
@@ -448,9 +635,95 @@
             requestAnimationFrame(animateElectrons);
         }
 
+        function updateGraph() {
+            // Agregar punto al gráfico
+            graphData.push({voltage: voltage, current: currentMeasurement});
+            
+            // Mantener solo los últimos 100 puntos
+            if (graphData.length > 100) {
+                graphData.shift();
+            }
+            
+            drawGraph();
+        }
+
+        function drawGraph() {
+            const canvas = document.getElementById('graph');
+            const ctx = canvas.getContext('2d');
+            
+            // Limpiar canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Dibujar ejes
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(40, canvas.height - 20);
+            ctx.lineTo(canvas.width - 20, canvas.height - 20);
+            ctx.moveTo(40, 20);
+            ctx.lineTo(40, canvas.height - 20);
+            ctx.stroke();
+            
+            // Etiquetas
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.fillText('Voltaje (V)', canvas.width - 80, canvas.height - 5);
+            ctx.save();
+            ctx.translate(15, canvas.height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Corriente (mA)', -30, 0);
+            ctx.restore();
+            
+            // Marcar líneas de excitación (4.9, 9.8, 14.7, etc.)
+            ctx.strokeStyle = '#ff6b35';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            for (let i = 1; i <= 8; i++) {
+                const voltageLevel = i * MERCURY_EXCITATION_ENERGY;
+                const x = 40 + (voltageLevel / 40) * (canvas.width - 60);
+                if (x < canvas.width - 20) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 20);
+                    ctx.lineTo(x, canvas.height - 20);
+                    ctx.stroke();
+                    
+                    ctx.fillStyle = '#ff6b35';
+                    ctx.fillText(`${voltageLevel.toFixed(1)}V`, x - 15, 15);
+                }
+            }
+            ctx.setLineDash([]);
+            
+            // Dibujar curva de Franck-Hertz
+            if (graphData.length > 1) {
+                ctx.strokeStyle = '#1976d2';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                
+                for (let i = 0; i < graphData.length; i++) {
+                    const x = 40 + (graphData[i].voltage / 40) * (canvas.width - 60);
+                    const y = canvas.height - 20 - (graphData[i].current / 4) * (canvas.height - 40);
+                    
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+            }
+        }
+
+        function clearGraph() {
+            const canvas = document.getElementById('graph');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawGraph();
+        }
+
         // Inicialización
         window.onload = function() {
             updateCurrentDisplay();
+            drawGraph();
         };
     </script>
 </body>
