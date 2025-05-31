@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Electrones</title>
+    <title>Simulador de Electrones - Flujo Direccional</title>
     <style>
         body {
             margin: 0;
@@ -62,16 +62,45 @@
             border: 3px solid #8fa025;
         }
 
-        .barrier {
+        .grid-barrier {
             position: absolute;
             left: 50%;
-            top: 10%;
-            width: 3px;
-            height: 80%;
-            background: #2c5aa0;
-            border: 1px dashed #1e3d6f;
+            top: 15%;
+            width: 4px;
+            height: 70%;
             transform: translateX(-50%);
             z-index: 10;
+            background: #2c5aa0;
+        }
+
+        .grid-barrier::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(0deg, transparent 0%, transparent 45%, #2c5aa0 45%, #2c5aa0 55%, transparent 55%, transparent 100%),
+                linear-gradient(90deg, transparent 0%, transparent 45%, #2c5aa0 45%, #2c5aa0 55%, transparent 55%, transparent 100%);
+            background-size: 8px 8px;
+            background-position: 0 0, 0 0;
+        }
+
+        .grid-barrier::after {
+            content: '';
+            position: absolute;
+            left: -10px;
+            top: -5px;
+            width: 24px;
+            height: calc(100% + 10px);
+            background-image: 
+                repeating-linear-gradient(0deg, 
+                    #2c5aa0 0px, #2c5aa0 2px, 
+                    transparent 2px, transparent 6px),
+                repeating-linear-gradient(90deg, 
+                    #2c5aa0 0px, #2c5aa0 2px, 
+                    transparent 2px, transparent 6px);
+            background-size: 6px 6px;
+            opacity: 0.8;
         }
 
         .electron {
@@ -95,26 +124,13 @@
             left: 2px;
         }
 
-        .moving {
-            animation: moveElectron 3s linear infinite;
-        }
-
-        @keyframes moveElectron {
-            0% {
-                transform: translateX(0) translateY(0);
-            }
-            25% {
-                transform: translateX(50px) translateY(-10px);
-            }
-            50% {
-                transform: translateX(100px) translateY(5px);
-            }
-            75% {
-                transform: translateX(150px) translateY(-5px);
-            }
-            100% {
-                transform: translateX(200px) translateY(0);
-            }
+        .electron-trail {
+            position: absolute;
+            width: 20px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(74, 144, 226, 0.3));
+            border-radius: 1px;
+            pointer-events: none;
         }
 
         .info-panel {
@@ -145,16 +161,59 @@
             font-weight: bold;
             color: #333;
         }
+
+        .voltage-indicator {
+            position: absolute;
+            top: -30px;
+            left: 20px;
+            font-weight: bold;
+            color: #d32f2f;
+        }
+
+        .voltage-indicator::before {
+            content: '−';
+            font-size: 20px;
+        }
+
+        .voltage-indicator-positive {
+            position: absolute;
+            top: -30px;
+            right: 20px;
+            font-weight: bold;
+            color: #1976d2;
+        }
+
+        .voltage-indicator-positive::before {
+            content: '+';
+            font-size: 20px;
+        }
+
+        .current-arrow {
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ff6b35;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .current-arrow::before {
+            content: '→ I (Corriente)';
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Simulador de Movimiento de Electrones</h1>
-        <p>Observa cómo se mueven los electrones en un conductor eléctrico</p>
+        <h1>Simulador de Flujo de Electrones</h1>
+        <p>Observa el movimiento direccional de electrones de izquierda a derecha</p>
     </div>
 
     <div class="conductor" id="conductor">
-        <div class="barrier"></div>
+        <div class="voltage-indicator"></div>
+        <div class="voltage-indicator-positive"></div>
+        <div class="current-arrow"></div>
+        <div class="grid-barrier"></div>
     </div>
 
     <div class="controls">
@@ -166,7 +225,7 @@
 
     <div class="info-panel">
         <div class="speed-control">
-            <label for="speedRange">Velocidad de los electrones:</label>
+            <label for="speedRange">Velocidad del flujo:</label>
             <input type="range" id="speedRange" min="1" max="10" value="5" onchange="updateSpeed(this.value)">
             <span id="speedValue">5</span>
         </div>
@@ -177,10 +236,10 @@
         
         <p><strong>Instrucciones:</strong></p>
         <ul>
-            <li>Haz clic en "Iniciar Simulación" para ver el movimiento de los electrones</li>
-            <li>Ajusta la velocidad con el control deslizante</li>
-            <li>Agrega más electrones con el botón correspondiente</li>
-            <li>La línea punteada representa una barrera o interfaz en el material</li>
+            <li>Los electrones se mueven de izquierda a derecha simulando corriente eléctrica</li>
+            <li>La rejilla azul representa una barrera o interfaz en el material</li>
+            <li>Ajusta la velocidad para ver diferentes intensidades de corriente</li>
+            <li>Los símbolos + y - indican la polaridad del voltaje aplicado</li>
         </ul>
     </div>
 
@@ -196,9 +255,9 @@
             electron.className = 'electron';
             electron.id = `electron-${electronId++}`;
             
-            // Posición inicial aleatoria en el lado izquierdo
-            const startX = Math.random() * 250 + 20; // Entre 20px y 270px desde la izquierda
-            const startY = Math.random() * 80 + 20;  // Entre 20px y 100px desde arriba
+            // Posición inicial en el lado izquierdo
+            const startX = -15; // Comienza fuera del conductor por la izquierda
+            const startY = Math.random() * 80 + 20;  // Posición vertical aleatoria
             
             electron.style.left = startX + 'px';
             electron.style.top = startY + 'px';
@@ -208,10 +267,10 @@
                 element: electron,
                 x: startX,
                 y: startY,
-                vx: (Math.random() - 0.5) * 2, // Velocidad horizontal aleatoria
-                vy: (Math.random() - 0.5) * 2, // Velocidad vertical aleatoria
-                originalX: startX,
-                originalY: startY
+                baseY: startY,
+                vx: 1 + Math.random() * 0.5, // Velocidad horizontal constante hacia la derecha
+                oscillation: Math.random() * 0.3 + 0.1, // Pequeña oscilación vertical
+                phase: Math.random() * Math.PI * 2 // Fase de oscilación
             });
             
             updateElectronCount();
@@ -224,8 +283,8 @@
         function startSimulation() {
             if (electrons.length === 0) {
                 // Crear algunos electrones iniciales
-                for (let i = 0; i < 6; i++) {
-                    createElectron();
+                for (let i = 0; i < 8; i++) {
+                    setTimeout(() => createElectron(), i * 500); // Crear con retraso
                 }
             }
             
@@ -264,35 +323,47 @@
         function animateElectrons() {
             if (!isRunning) return;
 
-            electrons.forEach(electron => {
-                // Actualizar posición
-                electron.x += electron.vx * (animationSpeed / 5);
-                electron.y += electron.vy * (animationSpeed / 5);
+            const currentTime = Date.now() * 0.01;
 
-                // Rebotar en los bordes del conductor
-                if (electron.x <= 10 || electron.x >= 570) {
-                    electron.vx *= -1;
-                }
-                if (electron.y <= 10 || electron.y >= 100) {
-                    electron.vy *= -1;
-                }
+            electrons.forEach((electron, index) => {
+                // Movimiento horizontal constante de izquierda a derecha
+                electron.x += electron.vx * (animationSpeed / 3);
+                
+                // Pequeña oscilación vertical para simular movimiento browniano
+                electron.y = electron.baseY + Math.sin(currentTime * electron.oscillation + electron.phase) * 8;
 
-                // Mantener dentro de los límites
-                electron.x = Math.max(10, Math.min(570, electron.x));
-                electron.y = Math.max(10, Math.min(100, electron.y));
+                // Si el electrón sale por la derecha, lo reposicionamos por la izquierda
+                if (electron.x > 620) {
+                    electron.x = -15;
+                    electron.baseY = Math.random() * 80 + 20;
+                    electron.y = electron.baseY;
+                }
 
                 // Aplicar posición
                 electron.element.style.left = electron.x + 'px';
                 electron.element.style.top = electron.y + 'px';
 
                 // Efecto de brillo aleatorio
-                if (Math.random() < 0.1) {
+                if (Math.random() < 0.05) {
                     electron.element.style.boxShadow = '0 0 15px rgba(74, 144, 226, 0.9)';
                     setTimeout(() => {
                         electron.element.style.boxShadow = '0 0 8px rgba(74, 144, 226, 0.6)';
                     }, 200);
                 }
+
+                // Efecto especial al pasar por la rejilla
+                if (electron.x > 295 && electron.x < 305) {
+                    electron.element.style.boxShadow = '0 0 20px rgba(74, 144, 226, 1)';
+                    electron.element.style.transform = 'scale(1.2)';
+                } else {
+                    electron.element.style.transform = 'scale(1)';
+                }
             });
+
+            // Crear nuevos electrones automáticamente
+            if (Math.random() < 0.02 && electrons.length < 15) {
+                createElectron();
+            }
 
             requestAnimationFrame(animateElectrons);
         }
