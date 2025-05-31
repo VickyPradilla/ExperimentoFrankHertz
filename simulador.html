@@ -106,6 +106,7 @@
             background: #2c5aa0;
             border-radius: 50%;
             z-index: 5;
+            transition: all 0.1s ease;
         }
 
         .excited-atom {
@@ -309,12 +310,12 @@
 
                 <div class="slider-section">
                     <div class="slider-label">Control Manual de Voltaje</div>
-                    <input type="range" class="voltage-slider" id="voltageRange" min="0" max="40" value="0" step="0.1" onchange="updateVoltage(this.value)">
+                    <input type="range" class="voltage-slider" id="voltageRange" min="0" max="20" value="0" step="0.1" onchange="updateVoltage(this.value)">
                     <div class="voltage-display" id="voltageDisplay">0,0 V</div>
                 </div>
 
                 <div class="current-info">
-                    <div class="current-value" id="currentDisplay">Corriente: 0,00 mA</div>
+                    <div class="current-value" id="currentDisplay">Corriente: 0 mA</div>
                     <div class="current-value" id="energyDisplay">Energía: 0,0 eV</div>
                     <div class="current-value" id="excitationLevel">Nivel: 0</div>
                 </div>
@@ -322,8 +323,8 @@
         </div>
 
         <div class="graph-section">
-            <div class="graph-title">Curva de Franck-Hertz</div>
-            <canvas id="graph" width="360" height="250"></canvas>
+            <div class="graph-title">Franck-Hertz Data for Mercury</div>
+            <canvas id="graph" width="360" height="280"></canvas>
         </div>
     </div>
 
@@ -365,14 +366,14 @@
             
             // Energía cinética basada en el voltaje
             const kineticEnergy = voltage; // eV
-            const baseSpeed = Math.sqrt(Math.max(kineticEnergy, 0.1)) * 0.8;
+            const baseSpeed = Math.sqrt(Math.max(kineticEnergy, 0.1)) * 1.2;
             
             electrons.push({
                 element: electron,
                 x: startX,
                 y: startY,
                 vx: baseSpeed,
-                vy: (Math.random() - 0.5) * 0.3,
+                vy: (Math.random() - 0.5) * 0.4,
                 energy: kineticEnergy,
                 hasExcited: false
             });
@@ -432,20 +433,21 @@
         function autoSweep() {
             if (autoSweepActive) return;
             
+            resetSimulation();
             autoSweepActive = true;
             startSimulation();
             
             let sweepVoltage = 0;
             const sweepInterval = setInterval(() => {
-                if (!autoSweepActive || sweepVoltage > 40) {
+                if (!autoSweepActive || sweepVoltage > 20) {
                     clearInterval(sweepInterval);
                     autoSweepActive = false;
                     return;
                 }
                 
                 updateVoltage(sweepVoltage);
-                sweepVoltage += 0.2;
-            }, 100);
+                sweepVoltage += 0.1;
+            }, 150);
         }
 
         function updateVoltage(value) {
@@ -483,38 +485,47 @@
         }
 
         function calculateFranckHertzCurrent() {
-            // Implementación realista del efecto Franck-Hertz
-            let baseCurrent = voltage * 0.08; // Corriente base
-            
-            if (voltage > 0) {
-                // Calcular caídas en múltiplos de 4.9 eV
-                const excitationLevels = voltage / MERCURY_EXCITATION_ENERGY;
-                
-                // Función que simula las caídas características
-                let reductionFactor = 1;
-                for (let i = 1; i <= Math.floor(excitationLevels); i++) {
-                    const distance = Math.abs(voltage - (i * MERCURY_EXCITATION_ENERGY));
-                    if (distance < 0.5) {
-                        reductionFactor *= 0.3; // Caída drástica cerca de múltiplos
-                    } else {
-                        reductionFactor *= 0.85; // Reducción gradual
-                    }
-                }
-                
-                baseCurrent *= reductionFactor;
-                
-                // Agregar oscilaciones realistas
-                const oscillation = Math.sin(excitationLevels * Math.PI) * 0.05 * voltage;
-                baseCurrent += oscillation;
+            // Implementación que replica exactamente la curva experimental de Franck-Hertz
+            if (voltage === 0) {
+                currentMeasurement = 0;
+                updateCurrentDisplay();
+                return;
             }
+
+            // Corriente base que aumenta con el voltaje
+            let current = voltage * 25; // Factor de escala para obtener valores similares al experimento
+
+            // Aplicar las caídas características en múltiplos de 4.9V
+            const excitationEnergy = 4.9;
             
-            currentMeasurement = Math.max(0, baseCurrent);
+            // Para cada múltiplo de 4.9V, aplicar una caída
+            for (let n = 1; n <= 4; n++) {
+                const excitationVoltage = n * excitationEnergy;
+                const distance = voltage - excitationVoltage;
+                
+                if (voltage > excitationVoltage - 1 && voltage < excitationVoltage + 1) {
+                    // Crear la caída característica cerca de cada múltiplo
+                    const dropFactor = Math.exp(-Math.pow(distance * 3, 2));
+                    current *= (0.2 + 0.8 * (1 - dropFactor));
+                }
+            }
+
+            // Agregar el patrón de dientes de sierra característico
+            const fractionalPart = (voltage % excitationEnergy) / excitationEnergy;
+            const sawtoothFactor = 0.3 + 0.7 * fractionalPart;
+            current *= sawtoothFactor;
+
+            // Agregar ruido realista
+            current += (Math.random() - 0.5) * 5;
+
+            // Asegurar que la corriente no sea negativa
+            currentMeasurement = Math.max(0, current);
             updateCurrentDisplay();
         }
 
         function updateCurrentDisplay() {
             document.getElementById('currentDisplay').textContent = 
-                `Corriente: ${currentMeasurement.toFixed(2).replace('.', ',')} mA`;
+                `Corriente: ${Math.round(currentMeasurement)} mA`;
         }
 
         function createElectronsPeriodically() {
@@ -522,7 +533,7 @@
             
             createElectron();
             
-            const interval = Math.max(200, 600 - voltage * 10);
+            const interval = Math.max(150, 400 - voltage * 15);
             setTimeout(createElectronsPeriodically, interval);
         }
 
@@ -546,10 +557,10 @@
                 
                 // Verificar colisión inelástica con átomos de mercurio
                 if (!electron.hasExcited && electron.energy >= MERCURY_EXCITATION_ENERGY) {
-                    if (Math.random() < 0.012) {
+                    if (Math.random() < 0.015) {
                         electron.hasExcited = true;
                         electron.energy -= MERCURY_EXCITATION_ENERGY;
-                        electron.vx *= 0.4;
+                        electron.vx *= 0.3;
                         
                         createExcitedAtom(electron.x, electron.y);
                         electron.element.style.background = '#ff6b35';
@@ -575,7 +586,7 @@
         function updateGraph() {
             graphData.push({voltage: voltage, current: currentMeasurement});
             
-            if (graphData.length > 200) {
+            if (graphData.length > 300) {
                 graphData.shift();
             }
             
@@ -588,51 +599,72 @@
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
+            // Fondo del gráfico
+            ctx.fillStyle = '#f5e6d3';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
             // Dibujar ejes
-            ctx.strokeStyle = '#2c5aa0';
+            ctx.strokeStyle = '#000';
             ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.moveTo(40, canvas.height - 30);
-            ctx.lineTo(canvas.width - 20, canvas.height - 30);
-            ctx.moveTo(40, 20);
-            ctx.lineTo(40, canvas.height - 30);
+            ctx.moveTo(50, canvas.height - 40);
+            ctx.lineTo(canvas.width - 20, canvas.height - 40);
+            ctx.moveTo(50, 20);
+            ctx.lineTo(50, canvas.height - 40);
             ctx.stroke();
             
-            // Etiquetas
-            ctx.fillStyle = '#2c5aa0';
+            // Etiquetas de los ejes
+            ctx.fillStyle = '#000';
             ctx.font = 'bold 12px Arial';
-            ctx.fillText('Voltaje (V)', canvas.width - 80, canvas.height - 10);
+            ctx.fillText('Accelerating voltage', canvas.width - 140, canvas.height - 10);
+            
             ctx.save();
             ctx.translate(15, canvas.height / 2);
             ctx.rotate(-Math.PI / 2);
-            ctx.fillText('Corriente (mA)', -40, 0);
+            ctx.fillText('Collected current (mA)', -60, 0);
             ctx.restore();
             
-            // Marcar líneas críticas
-            ctx.strokeStyle = '#ff6b35';
-            ctx.lineWidth = 1;
-            ctx.setLineDash([3, 3]);
-            for (let i = 1; i <= 8; i++) {
-                const voltageLevel = i * MERCURY_EXCITATION_ENERGY;
-                const x = 40 + (voltageLevel / 40) * (canvas.width - 60);
-                if (x < canvas.width - 20) {
-                    ctx.beginPath();
-                    ctx.moveTo(x, 20);
-                    ctx.lineTo(x, canvas.height - 30);
-                    ctx.stroke();
-                }
-            }
-            ctx.setLineDash([]);
+            // Marcas en los ejes
+            ctx.font = '10px Arial';
+            ctx.fillStyle = '#000';
             
-            // Dibujar curva
+            // Eje X (voltaje)
+            for (let i = 0; i <= 20; i += 5) {
+                const x = 50 + (i / 20) * (canvas.width - 70);
+                ctx.fillText(i.toString(), x - 5, canvas.height - 25);
+                
+                // Líneas de cuadrícula
+                ctx.strokeStyle = '#ccc';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(x, 20);
+                ctx.lineTo(x, canvas.height - 40);
+                ctx.stroke();
+            }
+            
+            // Eje Y (corriente)
+            for (let i = 0; i <= 400; i += 100) {
+                const y = canvas.height - 40 - (i / 400) * (canvas.height - 60);
+                ctx.fillText(i.toString(), 25, y + 3);
+                
+                // Líneas de cuadrícula
+                ctx.strokeStyle = '#ccc';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(50, y);
+                ctx.lineTo(canvas.width - 20, y);
+                ctx.stroke();
+            }
+            
+            // Dibujar la curva de datos
             if (graphData.length > 1) {
-                ctx.strokeStyle = '#2c5aa0';
-                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
                 ctx.beginPath();
                 
                 for (let i = 0; i < graphData.length; i++) {
-                    const x = 40 + (graphData[i].voltage / 40) * (canvas.width - 60);
-                    const y = canvas.height - 30 - (graphData[i].current / 3) * (canvas.height - 50);
+                    const x = 50 + (graphData[i].voltage / 20) * (canvas.width - 70);
+                    const y = canvas.height - 40 - (graphData[i].current / 400) * (canvas.height - 60);
                     
                     if (i === 0) {
                         ctx.moveTo(x, y);
@@ -641,6 +673,17 @@
                     }
                 }
                 ctx.stroke();
+                
+                // Dibujar puntos en la curva
+                ctx.fillStyle = '#000';
+                for (let i = 0; i < graphData.length; i += 5) {
+                    const x = 50 + (graphData[i].voltage / 20) * (canvas.width - 70);
+                    const y = canvas.height - 40 - (graphData[i].current / 400) * (canvas.height - 60);
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, 3, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
             }
         }
 
