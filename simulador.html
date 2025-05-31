@@ -8,7 +8,7 @@
         body {
             margin: 0;
             padding: 50px;
-            background: #f4e6d3;
+            background: #ffffff;
             font-family: Arial, sans-serif;
             display: flex;
             flex-direction: column;
@@ -29,144 +29,77 @@
 
         .apparatus-container {
             position: relative;
-            width: 700px;
-            height: 300px;
-            margin: 20px auto;
+            width: 600px;
+            height: 200px;
+            margin: 40px auto;
         }
 
         .tube {
             position: absolute;
             top: 50px;
             left: 50px;
-            width: 600px;
-            height: 120px;
+            width: 500px;
+            height: 100px;
             background: linear-gradient(45deg, #c4d63a, #a8c030);
-            border-radius: 60px;
-            border: 3px solid #8fa025;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border-radius: 50px;
+            border: 2px solid #8fa025;
             overflow: hidden;
-        }
-
-        .mercury-vapor {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(200, 200, 255, 0.1);
-            border-radius: 57px;
         }
 
         .cathode-label {
             position: absolute;
-            left: 20px;
-            top: 15px;
+            left: 0px;
+            top: 60px;
             font-weight: bold;
-            color: #d32f2f;
-            font-size: 16px;
-        }
-
-        .cathode-label::before {
-            content: '− ';
-            font-size: 20px;
+            color: #2c5aa0;
+            font-size: 18px;
         }
 
         .anode-label {
             position: absolute;
-            right: 20px;
-            top: 15px;
+            right: 0px;
+            top: 60px;
             font-weight: bold;
-            color: #1976d2;
-            font-size: 16px;
-        }
-
-        .anode-label::before {
-            content: '+ ';
-            font-size: 20px;
+            color: #2c5aa0;
+            font-size: 18px;
         }
 
         .grid {
             position: absolute;
-            right: 150px;
+            left: 350px;
             top: 60px;
             width: 3px;
-            height: 100px;
+            height: 80px;
             background: #2c5aa0;
             z-index: 10;
-        }
-
-        .grid::before {
-            content: '';
-            position: absolute;
-            left: -10px;
-            top: 0;
-            width: 23px;
-            height: 100px;
-            background-image: 
-                repeating-linear-gradient(0deg, 
-                    #2c5aa0 0px, #2c5aa0 1px, 
-                    transparent 1px, transparent 4px),
-                repeating-linear-gradient(90deg, 
-                    #2c5aa0 0px, #2c5aa0 1px, 
-                    transparent 1px, transparent 4px);
-            background-size: 3px 3px;
-        }
-
-        .grid-label {
-            position: absolute;
-            right: 140px;
-            top: 15px;
-            font-weight: bold;
-            color: #2c5aa0;
-            font-size: 14px;
+            border-left: 3px dashed #2c5aa0;
+            background: transparent;
         }
 
         .collector {
             position: absolute;
-            right: 70px;
+            right: 80px;
             top: 60px;
-            width: 20px;
-            height: 100px;
-            background: #696969;
-            border-radius: 3px;
-            border: 2px solid #555;
-        }
-
-        .collector-label {
-            position: absolute;
-            right: 45px;
-            top: 15px;
-            font-weight: bold;
-            color: #696969;
-            font-size: 14px;
+            width: 15px;
+            height: 80px;
+            background: #2c5aa0;
+            border-radius: 7px;
         }
 
         .electron {
             position: absolute;
             width: 12px;
             height: 12px;
-            background: radial-gradient(circle, #4a90e2, #2c5aa0);
+            background: #2c5aa0;
             border-radius: 50%;
-            box-shadow: 0 0 8px rgba(74, 144, 226, 0.6);
             z-index: 5;
-        }
-
-        .electron::before {
-            content: '−';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 8px;
-            font-weight: bold;
-            color: white;
         }
 
         .excited-atom {
             position: absolute;
             width: 8px;
             height: 8px;
-            background: radial-gradient(circle, #ff6b35, #ff4500);
+            background: #ff6b35;
             border-radius: 50%;
             animation: glow 0.5s ease-out;
             z-index: 3;
@@ -177,66 +110,8 @@
             100% { transform: scale(2); opacity: 0; }
         }
 
-        .voltage-source {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80px;
-            height: 60px;
-            background: #fff;
-            border: 2px solid #333;
-            border-radius: 5px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .voltage-source::before {
-            content: 'V';
-            font-size: 16px;
-            margin-bottom: 5px;
-        }
-
-        .wire-left {
-            position: absolute;
-            bottom: 50px;
-            left: 60px;
-            width: 280px;
-            height: 3px;
-            background: #333;
-        }
-
-        .wire-right {
-            position: absolute;
-            bottom: 50px;
-            right: 60px;
-            width: 280px;
-            height: 3px;
-            background: #333;
-        }
-
-        .ammeter {
-            position: absolute;
-            bottom: 30px;
-            right: 200px;
-            width: 40px;
-            height: 40px;
-            background: #fff;
-            border: 2px solid #333;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
         .controls {
-            margin: 20px 0;
+            margin: 30px 0;
             display: flex;
             gap: 10px;
             align-items: center;
@@ -245,115 +120,126 @@
         }
 
         button {
-            background: #4CAF50;
+            background: #2c5aa0;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 12px 24px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
+            font-weight: bold;
         }
 
         button:hover {
-            background: #45a049;
+            background: #1e3d6f;
         }
 
         .voltage-control {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
             margin: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 15px;
+            max-width: 500px;
         }
 
         .voltage-control label {
             font-weight: bold;
             color: #333;
+            font-size: 16px;
         }
 
         .voltage-control input {
-            width: 300px;
-            height: 8px;
+            width: 350px;
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .voltage-control input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #2c5aa0;
+            border-radius: 50%;
+            cursor: pointer;
         }
 
         .voltage-display {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
-            color: #1976d2;
+            color: #2c5aa0;
         }
 
         .preset-voltages {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
             gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin: 10px 0;
+            margin: 15px 0;
+            width: 100%;
         }
 
         .preset-btn {
-            background: #2196F3;
+            background: #6c757d;
             color: white;
             border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
+            padding: 10px 15px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 12px;
-            min-width: 60px;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
         }
 
         .preset-btn:hover {
-            background: #1976D2;
+            background: #495057;
         }
 
         .preset-btn.active {
             background: #ff6b35;
+            transform: scale(1.05);
         }
 
         .info-panel {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
             margin-top: 20px;
             max-width: 600px;
             text-align: left;
-        }
-
-        .apparatus-label {
-            position: absolute;
-            bottom: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
         }
 
         .current-display {
             margin: 10px 0;
             font-weight: bold;
             color: #333;
+            font-size: 16px;
         }
 
         .franck-hertz-graph {
             background: white;
-            border: 2px solid #333;
-            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
             padding: 20px;
             margin: 20px;
-            width: 400px;
-            height: 200px;
+            width: 450px;
+            height: 220px;
             position: relative;
         }
 
         .graph-title {
             text-align: center;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 16px;
         }
 
         .excitation-indicator {
@@ -362,11 +248,12 @@
             right: 20px;
             background: #ff6b35;
             color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
+            padding: 8px 15px;
+            border-radius: 20px;
             font-weight: bold;
             opacity: 0;
             transition: opacity 0.3s;
+            font-size: 14px;
         }
 
         .excitation-indicator.active {
@@ -374,7 +261,7 @@
         }
 
         .voltage-section {
-            border-top: 2px solid #eee;
+            border-top: 2px solid #e9ecef;
             padding-top: 15px;
             margin-top: 15px;
         }
@@ -382,8 +269,17 @@
         .section-title {
             font-weight: bold;
             color: #333;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             text-align: center;
+            font-size: 16px;
+        }
+
+        .apparatus-title {
+            text-align: center;
+            font-weight: bold;
+            color: #2c5aa0;
+            font-size: 16px;
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -394,25 +290,17 @@
     </div>
 
     <div class="apparatus-container">
-        <div class="cathode-label">CÁTODO</div>
-        <div class="anode-label">ÁNODO</div>
-        <div class="grid-label">Rejilla</div>
-        <div class="collector-label">Colector</div>
+        <div class="cathode-label">CÁTODO −</div>
+        <div class="anode-label">+ ÁNODO</div>
         
-        <div class="tube" id="tube">
-            <div class="mercury-vapor"></div>
-        </div>
+        <div class="tube" id="tube"></div>
         <div class="grid"></div>
         <div class="collector"></div>
-        <div class="voltage-source">
-            <span id="voltageSourceDisplay">0V</span>
-        </div>
-        <div class="wire-left"></div>
-        <div class="wire-right"></div>
-        <div class="ammeter">A</div>
-        <div class="apparatus-label">Experimento de Franck-Hertz</div>
+        
         <div class="excitation-indicator" id="excitationIndicator">¡Excitación de Hg!</div>
     </div>
+    
+    <div class="apparatus-title">Aparato Acelerador de Electrones</div>
 
     <div class="controls">
         <button onclick="startSimulation()">Iniciar</button>
@@ -445,7 +333,7 @@
 
     <div class="franck-hertz-graph">
         <div class="graph-title">Corriente vs Voltaje (Curva de Franck-Hertz)</div>
-        <canvas id="graph" width="360" height="140"></canvas>
+        <canvas id="graph" width="410" height="160"></canvas>
     </div>
 
     <div class="info-panel">
@@ -469,11 +357,9 @@
         let electronId = 0;
         let currentMeasurement = 0;
         let graphData = [];
-        let excitedAtoms = [];
 
         // Constantes del experimento
         const MERCURY_EXCITATION_ENERGY = 4.9; // eV
-        const ELECTRON_CHARGE = 1.602e-19; // Coulombs
 
         function createElectron() {
             if (voltage === 0) return;
@@ -484,8 +370,8 @@
             electron.id = `electron-${electronId++}`;
             
             // Posición inicial dentro del tubo, cerca del cátodo
-            const startX = 80;
-            const startY = Math.random() * 80 + 70; // Dentro del tubo
+            const startX = 70;
+            const startY = Math.random() * 60 + 70; // Dentro del tubo
             
             electron.style.left = startX + 'px';
             electron.style.top = startY + 'px';
@@ -494,14 +380,14 @@
             
             // Energía cinética basada en el voltaje
             const kineticEnergy = voltage; // eV
-            const baseSpeed = Math.sqrt(kineticEnergy) * 1.2;
+            const baseSpeed = Math.sqrt(kineticEnergy) * 1.0;
             
             electrons.push({
                 element: electron,
                 x: startX,
                 y: startY,
                 vx: baseSpeed,
-                vy: (Math.random() - 0.5) * 0.3,
+                vy: (Math.random() - 0.5) * 0.2,
                 energy: kineticEnergy,
                 hasExcited: false
             });
@@ -561,7 +447,6 @@
         function updateVoltage(value) {
             voltage = parseFloat(value);
             document.getElementById('voltageDisplay').textContent = voltage.toFixed(1) + ' V';
-            document.getElementById('voltageSourceDisplay').textContent = voltage.toFixed(1) + 'V';
             document.getElementById('energyDisplay').textContent = `Energía electrones: ${voltage.toFixed(1)} eV`;
             
             // Actualizar slider
@@ -620,7 +505,7 @@
             
             createElectron();
             
-            const interval = Math.max(200, 800 - voltage * 15);
+            const interval = Math.max(300, 1000 - voltage * 20);
             setTimeout(createElectronsPeriodically, interval);
         }
 
@@ -637,15 +522,15 @@
                     electron.y = 70;
                     electron.vy = Math.abs(electron.vy);
                 }
-                if (electron.y > 150) {
-                    electron.y = 150;
+                if (electron.y > 130) {
+                    electron.y = 130;
                     electron.vy = -Math.abs(electron.vy);
                 }
                 
                 // Verificar colisión inelástica con átomos de mercurio
                 if (!electron.hasExcited && electron.energy >= MERCURY_EXCITATION_ENERGY) {
                     // Probabilidad de colisión inelástica
-                    if (Math.random() < 0.02) {
+                    if (Math.random() < 0.015) {
                         electron.hasExcited = true;
                         electron.energy -= MERCURY_EXCITATION_ENERGY;
                         electron.vx *= 0.3; // Reducir velocidad drásticamente
@@ -654,21 +539,16 @@
                         createExcitedAtom(electron.x, electron.y);
                         
                         // Cambiar apariencia del electrón
-                        electron.element.style.background = 'radial-gradient(circle, #ff6b35, #d32f2f)';
+                        electron.element.style.background = '#ff6b35';
                     }
-                }
-                
-                // Efecto al pasar por la rejilla
-                if (electron.x > 480 && electron.x < 500) {
-                    electron.element.style.boxShadow = '0 0 15px rgba(74, 144, 226, 1)';
                 }
                 
                 // Aplicar posición
                 electron.element.style.left = electron.x + 'px';
-                electron.style.top = electron.y + 'px';
+                electron.element.style.top = electron.y + 'px';
                 
                 // Remover electrones que llegan al colector
-                if (electron.x > 560) {
+                if (electron.x > 480) {
                     if (electron.element.parentNode) {
                         electron.element.parentNode.removeChild(electron.element);
                     }
@@ -739,8 +619,8 @@
             
             // Dibujar curva de Franck-Hertz
             if (graphData.length > 1) {
-                ctx.strokeStyle = '#1976d2';
-                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#2c5aa0';
+                ctx.lineWidth = 3;
                 ctx.beginPath();
                 
                 for (let i = 0; i < graphData.length; i++) {
@@ -772,4 +652,3 @@
     </script>
 </body>
 </html>
-
