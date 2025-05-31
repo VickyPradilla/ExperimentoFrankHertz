@@ -57,73 +57,39 @@
             border-radius: 57px;
         }
 
-        .cathode {
-            position: absolute;
-            left: 20px;
-            top: 40px;
-            width: 40px;
-            height: 140px;
-            background: #8b4513;
-            border-radius: 5px;
-            border: 2px solid #654321;
-        }
-
-        .cathode::before {
-            content: '−';
-            position: absolute;
-            top: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 24px;
-            font-weight: bold;
-            color: #d32f2f;
-        }
-
         .cathode-label {
             position: absolute;
             left: 20px;
-            top: 200px;
+            top: 15px;
             font-weight: bold;
-            color: #333;
-            font-size: 14px;
+            color: #d32f2f;
+            font-size: 16px;
         }
 
-        .anode {
-            position: absolute;
-            right: 20px;
-            top: 40px;
-            width: 40px;
-            height: 140px;
-            background: #8b4513;
-            border-radius: 5px;
-            border: 2px solid #654321;
-        }
-
-        .anode::before {
-            content: '+';
-            position: absolute;
-            top: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 24px;
-            font-weight: bold;
-            color: #1976d2;
+        .cathode-label::before {
+            content: '− ';
+            font-size: 20px;
         }
 
         .anode-label {
             position: absolute;
             right: 20px;
-            top: 200px;
+            top: 15px;
             font-weight: bold;
-            color: #333;
-            font-size: 14px;
+            color: #1976d2;
+            font-size: 16px;
+        }
+
+        .anode-label::before {
+            content: '+ ';
+            font-size: 20px;
         }
 
         .grid {
             position: absolute;
-            right: 120px;
+            right: 150px;
             top: 60px;
-            width: 6px;
+            width: 3px;
             height: 100px;
             background: #2c5aa0;
             z-index: 10;
@@ -132,35 +98,35 @@
         .grid::before {
             content: '';
             position: absolute;
-            left: -15px;
+            left: -10px;
             top: 0;
-            width: 36px;
+            width: 23px;
             height: 100px;
             background-image: 
                 repeating-linear-gradient(0deg, 
-                    #2c5aa0 0px, #2c5aa0 2px, 
-                    transparent 2px, transparent 6px),
+                    #2c5aa0 0px, #2c5aa0 1px, 
+                    transparent 1px, transparent 4px),
                 repeating-linear-gradient(90deg, 
-                    #2c5aa0 0px, #2c5aa0 2px, 
-                    transparent 2px, transparent 6px);
-            background-size: 4px 4px;
+                    #2c5aa0 0px, #2c5aa0 1px, 
+                    transparent 1px, transparent 4px);
+            background-size: 3px 3px;
         }
 
         .grid-label {
             position: absolute;
-            right: 100px;
-            top: 200px;
+            right: 140px;
+            top: 15px;
             font-weight: bold;
-            color: #333;
-            font-size: 12px;
+            color: #2c5aa0;
+            font-size: 14px;
         }
 
         .collector {
             position: absolute;
             right: 70px;
-            top: 40px;
-            width: 25px;
-            height: 140px;
+            top: 60px;
+            width: 20px;
+            height: 100px;
             background: #696969;
             border-radius: 3px;
             border: 2px solid #555;
@@ -169,10 +135,10 @@
         .collector-label {
             position: absolute;
             right: 45px;
-            top: 200px;
+            top: 15px;
             font-weight: bold;
-            color: #333;
-            font-size: 12px;
+            color: #696969;
+            font-size: 14px;
         }
 
         .electron {
@@ -274,6 +240,8 @@
             display: flex;
             gap: 10px;
             align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         button {
@@ -299,7 +267,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
         }
 
         .voltage-control label {
@@ -316,6 +284,33 @@
             font-size: 18px;
             font-weight: bold;
             color: #1976d2;
+        }
+
+        .preset-voltages {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        .preset-btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            min-width: 60px;
+        }
+
+        .preset-btn:hover {
+            background: #1976D2;
+        }
+
+        .preset-btn.active {
+            background: #ff6b35;
         }
 
         .info-panel {
@@ -377,6 +372,19 @@
         .excitation-indicator.active {
             opacity: 1;
         }
+
+        .voltage-section {
+            border-top: 2px solid #eee;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -386,17 +394,16 @@
     </div>
 
     <div class="apparatus-container">
+        <div class="cathode-label">CÁTODO</div>
+        <div class="anode-label">ÁNODO</div>
+        <div class="grid-label">Rejilla</div>
+        <div class="collector-label">Colector</div>
+        
         <div class="tube" id="tube">
             <div class="mercury-vapor"></div>
         </div>
-        <div class="cathode"></div>
-        <div class="cathode-label">CÁTODO</div>
-        <div class="anode"></div>
-        <div class="anode-label">ÁNODO</div>
         <div class="grid"></div>
-        <div class="grid-label">Rejilla</div>
         <div class="collector"></div>
-        <div class="collector-label">Colector</div>
         <div class="voltage-source">
             <span id="voltageSourceDisplay">0V</span>
         </div>
@@ -417,6 +424,21 @@
         <label for="voltageRange">Voltaje Acelerador:</label>
         <input type="range" id="voltageRange" min="0" max="40" value="0" step="0.1" onchange="updateVoltage(this.value)">
         <div class="voltage-display" id="voltageDisplay">0.0 V</div>
+        
+        <div class="voltage-section">
+            <div class="section-title">Voltajes de Excitación (múltiplos de 4.9 eV):</div>
+            <div class="preset-voltages">
+                <button class="preset-btn" onclick="setPresetVoltage(4.9)">4.9 V</button>
+                <button class="preset-btn" onclick="setPresetVoltage(9.8)">9.8 V</button>
+                <button class="preset-btn" onclick="setPresetVoltage(14.7)">14.7 V</button>
+                <button class="preset-btn" onclick="setPresetVoltage(19.6)">19.6 V</button>
+                <button class="preset-btn" onclick="setPresetVoltage(24.5)">24.5 V</button>
+                <button class="preset-btn" onclick="setPresetVoltage(29.4)">29.4 V</button>
+                <button class="preset-btn" onclick="setPresetVoltage(34.3)">34.3 V</button>
+                <button class="preset-btn" onclick="setPresetVoltage(39.2)">39.2 V</button>
+            </div>
+        </div>
+        
         <div class="current-display" id="currentDisplay">Corriente: 0.00 mA</div>
         <div class="current-display" id="energyDisplay">Energía electrones: 0.0 eV</div>
     </div>
@@ -437,6 +459,7 @@
         </ul>
         <p><strong>Ecuación:</strong> E = eV (energía cinética del electrón)</p>
         <p>Cuando E ≥ 4.9 eV, ocurre excitación atómica y la corriente disminuye</p>
+        <p><strong>Uso:</strong> Haz clic en los botones de voltaje para saltar directamente a los múltiplos de 4.9 eV</p>
     </div>
 
     <script>
@@ -541,8 +564,29 @@
             document.getElementById('voltageSourceDisplay').textContent = voltage.toFixed(1) + 'V';
             document.getElementById('energyDisplay').textContent = `Energía electrones: ${voltage.toFixed(1)} eV`;
             
+            // Actualizar slider
+            document.getElementById('voltageRange').value = voltage;
+            
+            // Resaltar botón activo si coincide con un preset
+            updatePresetButtons();
+            
             calculateFranckHertzCurrent();
             updateGraph();
+        }
+
+        function setPresetVoltage(presetVoltage) {
+            updateVoltage(presetVoltage);
+        }
+
+        function updatePresetButtons() {
+            const presetButtons = document.querySelectorAll('.preset-btn');
+            presetButtons.forEach(btn => {
+                btn.classList.remove('active');
+                const btnVoltage = parseFloat(btn.textContent);
+                if (Math.abs(btnVoltage - voltage) < 0.1) {
+                    btn.classList.add('active');
+                }
+            });
         }
 
         function calculateFranckHertzCurrent() {
@@ -615,16 +659,16 @@
                 }
                 
                 // Efecto al pasar por la rejilla
-                if (electron.x > 520 && electron.x < 540) {
+                if (electron.x > 480 && electron.x < 500) {
                     electron.element.style.boxShadow = '0 0 15px rgba(74, 144, 226, 1)';
                 }
                 
                 // Aplicar posición
                 electron.element.style.left = electron.x + 'px';
-                electron.element.style.top = electron.y + 'px';
+                electron.style.top = electron.y + 'px';
                 
                 // Remover electrones que llegan al colector
-                if (electron.x > 580) {
+                if (electron.x > 560) {
                     if (electron.element.parentNode) {
                         electron.element.parentNode.removeChild(electron.element);
                     }
