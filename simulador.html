@@ -281,6 +281,18 @@
             cursor: not-allowed;
         }
 
+        .auto-sweep-btn {
+            background: #16a085;
+        }
+
+        .auto-sweep-btn:hover {
+            background: #138d75;
+        }
+
+        .auto-sweep-btn.active {
+            background: #e74c3c;
+        }
+
         .graph-section {
             background: white;
             border-radius: 20px;
@@ -381,6 +393,7 @@
         <button onclick="startSimulation()" id="startBtn">Iniciar</button>
         <button onclick="stopSimulation()" id="stopBtn" disabled>Detener</button>
         <button onclick="resetSimulation()" id="resetBtn">Reiniciar</button>
+        <button onclick="toggleAutoSweep()" id="autoSweepBtn" class="auto-sweep-btn">Barrido Automático</button>
     </div>
 
     <script>
@@ -391,6 +404,8 @@
         let electronId = 0;
         let currentMeasurement = 0;
         let graphData = [];
+        let autoSweepActive = false;
+        let autoSweepInterval = null;
 
         // Constantes del experimento
         const MERCURY_EXCITATION_ENERGY = 4.9; // eV
@@ -465,6 +480,11 @@
         }
 
         function resetSimulation() {
+            // Detener barrido automático si está activo
+            if (autoSweepActive) {
+                stopAutoSweep();
+            }
+            
             isRunning = false;
             document.getElementById('startBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
@@ -491,7 +511,75 @@
             clearGraph();
         }
 
+        function toggleAutoSweep() {
+            if (autoSweepActive) {
+                stopAutoSweep();
+            } else {
+                startAutoSweep();
+            }
+        }
+
+        function startAutoSweep() {
+            // Resetear antes de comenzar el barrido
+            resetSimulation();
+            
+            autoSweepActive = true;
+            document.getElementById('autoSweepBtn').textContent = 'Detener Barrido';
+            document.getElementById('autoSweepBtn').classList.add('active');
+            
+            // Deshabilitar controles manuales durante el barrido
+            document.getElementById('voltageRange').disabled = true;
+            document.querySelectorAll('.voltage-btn').forEach(btn => btn.disabled = true);
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('resetBtn').disabled = true;
+            
+            // Iniciar simulación
+            startSimulation();
+            
+            let sweepVoltage = 0;
+            autoSweepInterval = setInterval(() => {
+                if (!autoSweepActive || sweepVoltage > 20) {
+                    stopAutoSweep();
+                    return;
+                }
+                
+                // Actualizar voltaje progresivamente
+                voltage = sweepVoltage;
+                maxVoltageReached = sweepVoltage;
+                document.getElementById('voltageRange').value = sweepVoltage;
+                
+                updateDisplay();
+                calculateFranckHertzCurrent();
+                updateGraph();
+                
+                sweepVoltage += 0.1;
+            }, 150);
+        }
+
+        function stopAutoSweep() {
+            autoSweepActive = false;
+            
+            if (autoSweepInterval) {
+                clearInterval(autoSweepInterval);
+                autoSweepInterval = null;
+            }
+            
+            document.getElementById('autoSweepBtn').textContent = 'Barrido Automático';
+            document.getElementById('autoSweepBtn').classList.remove('active');
+            
+            // Rehabilitar controles manuales
+            document.getElementById('voltageRange').disabled = false;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('resetBtn').disabled = false;
+            
+            // Actualizar botones de voltaje
+            updatePresetButtons();
+        }
+
         function handleSliderChange(value) {
+            // No permitir cambios manuales durante barrido automático
+            if (autoSweepActive) return;
+            
             const newVoltage = parseFloat(value);
             
             // Solo permitir avanzar, no retroceder
@@ -514,6 +602,9 @@
         }
 
         function setPresetVoltage(presetVoltage) {
+            // No permitir cambios manuales durante barrido automático
+            if (autoSweepActive) return;
+            
             if (presetVoltage >= maxVoltageReached) {
                 maxVoltageReached = presetVoltage;
                 voltage = presetVoltage;
@@ -558,11 +649,16 @@
                 btn.classList.remove('active');
                 const btnVoltage = parseFloat(btn.textContent.replace(',', '.'));
                 
-                // Deshabilitar botones que están por debajo del máximo alcanzado
-                if (btnVoltage < maxVoltageReached) {
+                // Durante barrido automático, deshabilitar todos los botones
+                if (autoSweepActive) {
                     btn.disabled = true;
                 } else {
-                    btn.disabled = false;
+                    // Deshabilitar botones que están por debajo del máximo alcanzado
+                    if (btnVoltage < maxVoltageReached) {
+                        btn.disabled = true;
+                    } else {
+                        btn.disabled = false;
+                    }
                 }
                 
                 if (Math.abs(btnVoltage - voltage) < 0.1) {
