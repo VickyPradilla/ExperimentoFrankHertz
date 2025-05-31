@@ -1,2 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Electrones</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 50px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
 
+        .container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            margin: 20px 0;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .conductor {
+            position: relative;
+            width: 600px;
+            height: 120px;
+            background: linear-gradient(45deg, #c4d63a, #a8c030);
+            border-radius: 60px;
+            margin: 20px auto;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border: 3px solid #8fa025;
+        }
+
+        .barrier {
+            position: absolute;
+            left: 50%;
+            top: 10%;
+            width: 3px;
+            height: 80%;
+            background: #2c5aa0;
+            border: 1px dashed #1e3d6f;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+
+        .electron {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: radial-gradient(circle, #4a90e2, #2c5aa0);
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(74, 144, 226, 0.6);
+            transition: all 0.1s ease;
+        }
+
+        .electron::before {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+        }
+
+        .moving {
+            animation: moveElectron 3s linear infinite;
+        }
+
+        @keyframes moveElectron {
+            0% {
+                transform: translateX(0) translateY(0);
+            }
+            25% {
+                transform: translateX(50px) translateY(-10px);
+            }
+            50% {
+                transform: translateX(100px) translateY(5px);
+            }
+            75% {
+                transform: translateX(150px) translateY(-5px);
+            }
+            100% {
+                transform: translateX(200px) translateY(0);
+            }
+        }
+
+        .info-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            max-width: 600px;
+        }
+
+        .speed-control {
+            margin: 15px 0;
+        }
+
+        .speed-control label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .speed-control input {
+            width: 200px;
+        }
+
+        .electron-count {
+            margin: 10px 0;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Simulador de Movimiento de Electrones</h1>
+        <p>Observa cómo se mueven los electrones en un conductor eléctrico</p>
+    </div>
+
+    <div class="conductor" id="conductor">
+        <div class="barrier"></div>
+    </div>
+
+    <div class="controls">
+        <button onclick="startSimulation()">Iniciar Simulación</button>
+        <button onclick="stopSimulation()">Detener</button>
+        <button onclick="resetSimulation()">Reiniciar</button>
+        <button onclick="addElectron()">Agregar Electrón</button>
+    </div>
+
+    <div class="info-panel">
+        <div class="speed-control">
+            <label for="speedRange">Velocidad de los electrones:</label>
+            <input type="range" id="speedRange" min="1" max="10" value="5" onchange="updateSpeed(this.value)">
+            <span id="speedValue">5</span>
+        </div>
+        
+        <div class="electron-count" id="electronCount">
+            Electrones en el conductor: 0
+        </div>
+        
+        <p><strong>Instrucciones:</strong></p>
+        <ul>
+            <li>Haz clic en "Iniciar Simulación" para ver el movimiento de los electrones</li>
+            <li>Ajusta la velocidad con el control deslizante</li>
+            <li>Agrega más electrones con el botón correspondiente</li>
+            <li>La línea punteada representa una barrera o interfaz en el material</li>
+        </ul>
+    </div>
+
+    <script>
+        let electrons = [];
+        let isRunning = false;
+        let animationSpeed = 5;
+        let electronId = 0;
+
+        function createElectron() {
+            const conductor = document.getElementById('conductor');
+            const electron = document.createElement('div');
+            electron.className = 'electron';
+            electron.id = `electron-${electronId++}`;
+            
+            // Posición inicial aleatoria en el lado izquierdo
+            const startX = Math.random() * 250 + 20; // Entre 20px y 270px desde la izquierda
+            const startY = Math.random() * 80 + 20;  // Entre 20px y 100px desde arriba
+            
+            electron.style.left = startX + 'px';
+            electron.style.top = startY + 'px';
+            
+            conductor.appendChild(electron);
+            electrons.push({
+                element: electron,
+                x: startX,
+                y: startY,
+                vx: (Math.random() - 0.5) * 2, // Velocidad horizontal aleatoria
+                vy: (Math.random() - 0.5) * 2, // Velocidad vertical aleatoria
+                originalX: startX,
+                originalY: startY
+            });
+            
+            updateElectronCount();
+        }
+
+        function addElectron() {
+            createElectron();
+        }
+
+        function startSimulation() {
+            if (electrons.length === 0) {
+                // Crear algunos electrones iniciales
+                for (let i = 0; i < 6; i++) {
+                    createElectron();
+                }
+            }
+            
+            isRunning = true;
+            animateElectrons();
+        }
+
+        function stopSimulation() {
+            isRunning = false;
+        }
+
+        function resetSimulation() {
+            isRunning = false;
+            const conductor = document.getElementById('conductor');
+            
+            // Remover todos los electrones
+            electrons.forEach(electron => {
+                conductor.removeChild(electron.element);
+            });
+            
+            electrons = [];
+            electronId = 0;
+            updateElectronCount();
+        }
+
+        function updateSpeed(value) {
+            animationSpeed = parseInt(value);
+            document.getElementById('speedValue').textContent = value;
+        }
+
+        function updateElectronCount() {
+            document.getElementById('electronCount').textContent = 
+                `Electrones en el conductor: ${electrons.length}`;
+        }
+
+        function animateElectrons() {
+            if (!isRunning) return;
+
+            electrons.forEach(electron => {
+                // Actualizar posición
+                electron.x += electron.vx * (animationSpeed / 5);
+                electron.y += electron.vy * (animationSpeed / 5);
+
+                // Rebotar en los bordes del conductor
+                if (electron.x <= 10 || electron.x >= 570) {
+                    electron.vx *= -1;
+                }
+                if (electron.y <= 10 || electron.y >= 100) {
+                    electron.vy *= -1;
+                }
+
+                // Mantener dentro de los límites
+                electron.x = Math.max(10, Math.min(570, electron.x));
+                electron.y = Math.max(10, Math.min(100, electron.y));
+
+                // Aplicar posición
+                electron.element.style.left = electron.x + 'px';
+                electron.element.style.top = electron.y + 'px';
+
+                // Efecto de brillo aleatorio
+                if (Math.random() < 0.1) {
+                    electron.element.style.boxShadow = '0 0 15px rgba(74, 144, 226, 0.9)';
+                    setTimeout(() => {
+                        electron.element.style.boxShadow = '0 0 8px rgba(74, 144, 226, 0.6)';
+                    }, 200);
+                }
+            });
+
+            requestAnimationFrame(animateElectrons);
+        }
+
+        // Crear algunos electrones iniciales al cargar la página
+        window.onload = function() {
+            updateElectronCount();
+        };
+    </script>
+</body>
+</html>
 
