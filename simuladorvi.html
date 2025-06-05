@@ -102,18 +102,23 @@
 
   <script>
     let voltage = 0;
-    let maxVoltageReached = 0;
     let graphData = [];
-    let autoSweepActive = false;
+    const STOPPING_POTENTIAL = 1.5;
 
     document.getElementById('voltageRange').addEventListener('input', (e) => {
       voltage = parseFloat(e.target.value);
-      maxVoltageReached = Math.max(maxVoltageReached, voltage);
       document.getElementById('voltageDisplay').textContent = voltage.toFixed(1).replace('.', ',') + ' V';
     });
 
     function manualPlotGraph() {
-      graphData.push({ voltage: voltage, current: Math.random() * 100 }); // ejemplo
+      graphData = [];
+      for (let v = 0; v <= voltage; v += 0.1) {
+        const effectiveVoltage = v - STOPPING_POTENTIAL;
+        let current = effectiveVoltage > 0 ? effectiveVoltage * 25 : 0;
+        current += (Math.random() - 0.5) * 5; // ruido
+        current = Math.max(0, current);
+        graphData.push({ voltage: v, current });
+      }
       drawGraph();
     }
 
