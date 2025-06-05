@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Experimento de Franck-Hertz</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 30px;
+      background: linear-gradient(135deg, #a8c8ec, #b8d4f0);
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    h1 {
+      color: #2c5aa0;
+      margin-bottom: 10px;
+      font-size: 28px;
+      font-weight: bold;
+    }
+    .main-content {
+      display: flex;
+      gap: 30px;
+      align-items: flex-start;
+      margin: 20px 0;
+    }
+    .graph-section {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      width: 400px;
+      margin-top: 20px;
+    }
+    .graph-title {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 15px;
+      color: #2c5aa0;
+      font-size: 16px;
+    }
+    .graph-button {
+      margin-top: 15px;
+      background: #2c5aa0;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 15px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .graph-button:hover {
+      background: #1e3d6f;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Experimento de Franck-Hertz</h1>
+    <p style="color: #2c5aa0; font-weight: bold;">Demostración de la cuantización de energía atómica</p>
+  </div>
+
+  <div class="main-content">
+    <div class="control-panel">
+      <div class="slider-section">
+        <div class="slider-label">Control Manual de Voltaje</div>
+        <input type="range" class="voltage-slider" id="voltageRange" min="0" max="20" value="0" step="0.1">
+        <div class="voltage-display" id="voltageDisplay">0,0 V</div>
+      </div>
+      <div class="stopping-potential-info">Potencial de frenado: 1,5 V</div>
+      <div id="currentInfo" class="current-info" style="display: none;">
+        <div class="current-value" id="currentDisplay">Corriente: 0 mA</div>
+        <div class="current-value" id="energyDisplay">Energía: 0,0 eV</div>
+        <div class="current-value" id="excitationLevel">Nivel: 0</div>
+      </div>
+      <div id="noCurrentWarning" class="no-current-warning">
+        ⚠️ NO HAY CORRIENTE AÚN<br>
+        <small>Supere el potencial de frenado (1,5 V)</small>
+      </div>
+    </div>
+    <div class="graph-section">
+      <div class="graph-title">Franck-Hertz Data for Mercury</div>
+      <canvas id="graph" width="360" height="280"></canvas>
+      <button class="graph-button" onclick="manualPlotGraph()">Graficar</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button onclick="startSimulation()" id="startBtn">Iniciar</button>
+    <button onclick="stopSimulation()" id="stopBtn" disabled>Detener</button>
+    <button onclick="resetSimulation()" id="resetBtn">Reiniciar</button>
+    <button onclick="toggleAutoSweep()" id="autoSweepBtn" class="auto-sweep-btn">Barrido Automático</button>
+  </div>
+
+  <script>
+    let voltage = 0;
+    let maxVoltageReached = 0;
+    let graphData = [];
+    let autoSweepActive = false;
+
+    document.getElementById('voltageRange').addEventListener('input', (e) => {
+      voltage = parseFloat(e.target.value);
+      maxVoltageReached = Math.max(maxVoltageReached, voltage);
+      document.getElementById('voltageDisplay').textContent = voltage.toFixed(1).replace('.', ',') + ' V';
+    });
+
+    function manualPlotGraph() {
+      graphData.push({ voltage: voltage, current: Math.random() * 100 }); // ejemplo
+      drawGraph();
+    }
+
+    function drawGraph() {
+      const canvas = document.getElementById('graph');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#f5e6d3';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(50, canvas.height - 40);
+      ctx.lineTo(canvas.width - 20, canvas.height - 40);
+      ctx.moveTo(50, 20);
+      ctx.lineTo(50, canvas.height - 40);
+      ctx.stroke();
+      if (graphData.length > 1) {
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < graphData.length; i++) {
+          const x = 50 + (graphData[i].voltage / 20) * (canvas.width - 70);
+          const y = canvas.height - 40 - (graphData[i].current / 400) * (canvas.height - 60);
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        }
+        ctx.stroke();
+      }
+    }
+  </script>
+</body>
+</html>
