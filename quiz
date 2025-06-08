@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>QUIZ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 30px;
+            background-color: #f2f2f2;
+        }
+        .quiz-container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .question {
+            margin-bottom: 20px;
+        }
+        .options label {
+            display: block;
+            margin: 5px 0;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        #home-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <button id="home-btn" onclick="location.href='index.html'">Volver al inicio</button>
+    <div class="quiz-container" id="quiz">
+        <h1>QUIZ</h1>
+        <button onclick="startQuiz()">Empezar Quiz</button>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "¿Cuál es la capital de Francia?",
+                options: ["Madrid", "París", "Berlín", "Roma"],
+                correct: 1
+            },
+            {
+                question: "¿Qué planeta es el más cercano al sol?",
+                options: ["Venus", "Marte", "Mercurio", "Júpiter"],
+                correct: 2
+            },
+            {
+                question: "¿En qué año llegó el hombre a la luna?",
+                options: ["1965", "1969", "1972", "1959"],
+                correct: 1
+            }
+        ];
+
+        let currentQuestion = 0;
+        const answers = new Array(questions.length).fill(null);
+
+        function startQuiz() {
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const q = questions[currentQuestion];
+            let html = `<h2>Pregunta ${currentQuestion + 1}</h2>`;
+            html += `<div class="question">${q.question}</div>`;
+            html += '<div class="options">';
+            q.options.forEach((opt, index) => {
+                const checked = answers[currentQuestion] === index ? 'checked' : '';
+                html += `
+                    <label><input type="radio" name="option" value="${index}" ${checked}> ${opt}</label>
+                `;
+            });
+            html += '</div>';
+            html += '<div class="navigation">';
+            if (currentQuestion > 0) {
+                html += '<button onclick="prevQuestion()">Anterior</button>';
+            } else {
+                html += '<div></div>';
+            }
+            if (currentQuestion < questions.length - 1) {
+                html += '<button onclick="nextQuestion()">Siguiente</button>';
+            } else {
+                html += '<button onclick="showResults()">Ver resultados</button>';
+            }
+            html += '</div>';
+            document.getElementById('quiz').innerHTML = html;
+
+            document.querySelectorAll('input[name="option"]').forEach(input => {
+                input.addEventListener('change', e => {
+                    answers[currentQuestion] = parseInt(e.target.value);
+                });
+            });
+        }
+
+        function nextQuestion() {
+            if (answers[currentQuestion] !== null) {
+                currentQuestion++;
+                showQuestion();
+            } else {
+                alert("Por favor selecciona una opción antes de continuar.");
+            }
+        }
+
+        function prevQuestion() {
+            currentQuestion--;
+            showQuestion();
+        }
+
+        function showResults() {
+            let html = '<h2>Resultados</h2>';
+            questions.forEach((q, index) => {
+                const isCorrect = answers[index] === q.correct;
+                html += `<div>
+                    <strong>Pregunta ${index + 1}:</strong> ${q.question}<br>
+                    Tu respuesta: ${q.options[answers[index]] || "No respondida"}<br>
+                    ${isCorrect ? '<span style="color:green">Correcto</span>' : `<span style="color:red">Incorrecto. Respuesta correcta: ${q.options[q.correct]}</span>`}
+                    <hr>
+                </div>`;
+            });
+            html += '<div class="navigation">';
+            html += '<button onclick="location.href='teoria.html'">Ir a teoría</button>';
+            html += '<button onclick="location.href='simulador.html'">Ir a simulador</button>';
+            html += '</div>';
+            document.getElementById('quiz').innerHTML = html;
+        }
+    </script>
+</body>
+</html>
