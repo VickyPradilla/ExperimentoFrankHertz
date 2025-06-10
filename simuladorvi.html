@@ -126,7 +126,7 @@
             z-index: 5;
             transition: all 0.1s ease;
         }
-
+<!-- //esta comentado son los electrones rojos
         .excited-atom {
             position: absolute;
             width: 8px;
@@ -136,7 +136,7 @@
             animation: glow 0.5s ease-out;
             z-index: 3;
         }
-
+-->
         @keyframes glow {
             0% { transform: scale(1); opacity: 1; }
             100% { transform: scale(2); opacity: 0; }
@@ -156,43 +156,7 @@
             font-size: 16px;
             margin-bottom: 15px;
         }
-
-        .voltage-buttons {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .voltage-btn {
-            background: #2c5aa0;
-            color: #c4d63a;
-            border: none;
-            padding: 12px 8px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-
-        .voltage-btn:hover {
-            background: #1e3d6f;
-            transform: scale(1.05);
-        }
-
-        .voltage-btn.active {
-            background: #ff6b35;
-            color: white;
-        }
-
-        .voltage-btn:disabled {
-            background: #9ca3af;
-            color: #6b7280;
-            cursor: not-allowed;
-            transform: none;
-        }
-
+        
         .slider-section {
             margin: 20px 0;
         }
@@ -327,30 +291,12 @@
             font-size: 16px;
         }
 
-        .excitation-indicator {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #ff6b35;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-weight: bold;
-            opacity: 0;
-            transition: opacity 0.3s;
-            font-size: 12px;
-        }
-
-        .excitation-indicator.active {
-            opacity: 1;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Experimento de Franck-Hertz</h1>
         <p style="color: #2c5aa0; font-weight: bold;">Demostración de la cuantización de energía atómica</p>
-        <a href="quiz.html" class="quiz-button">Tomar Quiz</a>
     </div>
 
     <div class="main-content">
@@ -387,7 +333,7 @@
 
                 <div id="noCurrentWarning" class="no-current-warning">
                     ⚠️ NO HAY CORRIENTE AÚN<br>
-                    <small>Supere el potencial de frenado (1,5 V)</small>
+                    <small>Supere el potencial de frenado</small>
                 </div>
             </div>
         </div>
@@ -397,7 +343,7 @@
             <canvas id="graph" width="360" height="280"></canvas>
         </div>
     </div>
-
+    <a href="quiz.html" class="quiz-button">Tomar Quiz</a>  //Boton de quiz!!!
     <div class="controls">
         <button onclick="startSimulation()" id="startBtn">Iniciar</button>
         <button onclick="stopSimulation()" id="stopBtn" disabled>Detener</button>
@@ -610,25 +556,6 @@
             }
         }
 
-        function setPresetVoltage(presetVoltage) {
-            // No permitir cambios manuales durante barrido automático
-            if (autoSweepActive) return;
-            
-            if (presetVoltage >= maxVoltageReached) {
-                maxVoltageReached = presetVoltage;
-                voltage = presetVoltage;
-                document.getElementById('voltageRange').value = voltage;
-                
-                if (!isRunning) {
-                    startSimulation();
-                }
-                
-                updateDisplay();
-                calculateFranckHertzCurrent();
-                updateGraph();
-            }
-        }
-
         function updateDisplay() {
             document.getElementById('voltageDisplay').textContent = voltage.toFixed(1).replace('.', ',') + ' V';
             
@@ -650,30 +577,6 @@
             
             // Actualizar botones
             updatePresetButtons();
-        }
-
-        function updatePresetButtons() {
-            const presetButtons = document.querySelectorAll('.voltage-btn');
-            presetButtons.forEach(btn => {
-                btn.classList.remove('active');
-                const btnVoltage = parseFloat(btn.textContent.replace(',', '.'));
-                
-                // Durante barrido automático, deshabilitar todos los botones
-                if (autoSweepActive) {
-                    btn.disabled = true;
-                } else {
-                    // Deshabilitar botones que están por debajo del máximo alcanzado
-                    if (btnVoltage < maxVoltageReached) {
-                        btn.disabled = true;
-                    } else {
-                        btn.disabled = false;
-                    }
-                }
-                
-                if (Math.abs(btnVoltage - voltage) < 0.1) {
-                    btn.classList.add('active');
-                }
-            });
         }
 
         function calculateFranckHertzCurrent() {
