@@ -7,7 +7,7 @@
     <style>
         body {
             margin: 0;
-            padding: 20px;
+            padding: 30px;
             background: linear-gradient(135deg, #a8c8ec, #b8d4f0);
             font-family: Arial, sans-serif;
             display: flex;
@@ -23,34 +23,16 @@
 
         h1 {
             color: #2c5aa0;
-            margin-bottom: 5px;
-            font-size: 30px;
+            margin-bottom: 10px;
+            font-size: 28px;
             font-weight: bold;
-        }
-
-        .quiz-button {
-            margin-top: 10px;
-            background: #2c5aa0;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 15px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            text-decoration: none;
-            transition: background 0.3s;
-        }
-
-        .quiz-button:hover {
-            background: #1e3d6f;
         }
 
         .main-content {
             display: flex;
             gap: 30px;
             align-items: flex-start;
-            margin: 0px 0;
+            margin: 20px 0;
         }
 
         .apparatus-section {
@@ -126,8 +108,7 @@
             z-index: 5;
             transition: all 0.1s ease;
         }
-/* //esta comentado son los electrones rojos
-        
+
         .excited-atom {
             position: absolute;
             width: 8px;
@@ -136,8 +117,8 @@
             border-radius: 50%;
             animation: glow 0.5s ease-out;
             z-index: 3;
-            }
-*/
+        }
+
         @keyframes glow {
             0% { transform: scale(1); opacity: 1; }
             100% { transform: scale(2); opacity: 0; }
@@ -157,7 +138,7 @@
             font-size: 16px;
             margin-bottom: 15px;
         }
-        
+
         .slider-section {
             margin: 20px 0;
         }
@@ -292,6 +273,23 @@
             font-size: 16px;
         }
 
+        .excitation-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ff6b35;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+        }
+
+        .excitation-indicator.active {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -305,11 +303,12 @@
             <div class="apparatus-container">
                 <div class="cathode-label">CÁTODO −</div>
                 <div class="anode-label">+ ÁNODO</div>
-
+                
                 <div class="tube" id="tube"></div>
                 <div class="grid"></div>
                 <div class="collector"></div>
-
+                
+                <div class="excitation-indicator" id="excitationIndicator">¡Excitación Hg!</div>
             </div>
 
             <div class="control-panel">
@@ -333,7 +332,7 @@
 
                 <div id="noCurrentWarning" class="no-current-warning">
                     ⚠️ NO HAY CORRIENTE AÚN<br>
-                    <small>Supere el potencial de frenado</small>
+                    <small>Supere el potencial de frenado (1,5 V)</small>
                 </div>
             </div>
         </div>
@@ -343,13 +342,12 @@
             <canvas id="graph" width="360" height="280"></canvas>
         </div>
     </div>
-    
+
     <div class="controls">
         <button onclick="startSimulation()" id="startBtn">Iniciar</button>
         <button onclick="stopSimulation()" id="stopBtn" disabled>Detener</button>
         <button onclick="resetSimulation()" id="resetBtn">Reiniciar</button>
         <button onclick="toggleAutoSweep()" id="autoSweepBtn" class="auto-sweep-btn">Barrido Automático</button>
-         <button onclick="window.location.href='quiz.html'" class="quiz-btn">Tomar Quiz</button>
     </div>
 
     <script>
@@ -485,7 +483,6 @@
             
             // Deshabilitar controles manuales durante el barrido
             document.getElementById('voltageRange').disabled = true;
-            document.querySelectorAll('.voltage-btn').forEach(btn => btn.disabled = true);
             document.getElementById('startBtn').disabled = true;
             document.getElementById('resetBtn').disabled = true;
             
@@ -527,9 +524,6 @@
             document.getElementById('voltageRange').disabled = false;
             document.getElementById('startBtn').disabled = false;
             document.getElementById('resetBtn').disabled = false;
-            
-            // Actualizar botones de voltaje
-            updatePresetButtons();
         }
 
         function handleSliderChange(value) {
@@ -575,9 +569,6 @@
                 document.getElementById('currentInfo').style.display = 'none';
                 document.getElementById('noCurrentWarning').style.display = 'block';
             }
-            
-            // Actualizar botones
-            updatePresetButtons();
         }
 
         function calculateFranckHertzCurrent() {
@@ -687,122 +678,134 @@
             requestAnimationFrame(animateElectrons);
         }
 
-        <script>
-const canvas = document.getElementById('graph');
-const ctx = canvas.getContext('2d');
-let graphData = [];
-let voltage = 0;
-let isAutoSweep = false;
-let autoSweepInterval;
+        function updateGraph() {
+            graphData.push({voltage: voltage, current: currentMeasurement});
+            
+            if (graphData.length > 300) {
+                graphData.shift();
+            }
+            
+            drawGraph();
+        }
 
-function calculateCurrent(voltage) {
-  const stoppingPotential = 1.5;
-  if (voltage <= stoppingPotential) return 0;
+        function drawGraph() {
+            const canvas = document.getElementById('graph');
+            const ctx = canvas.getContext('2d');
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Fondo del gráfico
+            ctx.fillStyle = '#f5e6d3';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Dibujar ejes
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(50, canvas.height - 40);
+            ctx.lineTo(canvas.width - 20, canvas.height - 40);
+            ctx.moveTo(50, 20);
+            ctx.lineTo(50, canvas.height - 40);
+            ctx.stroke();
+            
+            // Etiquetas de los ejes
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 12px Arial';
+            ctx.fillText('Accelerating voltage', canvas.width - 140, canvas.height - 10);
+            
+            ctx.save();
+            ctx.translate(15, canvas.height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Collected current (mA)', -60, 0);
+            ctx.restore();
+            
+            // Marcas en los ejes
+            ctx.font = '10px Arial';
+            ctx.fillStyle = '#000';
+            
+            // Eje X (voltaje)
+            for (let i = 0; i <= 20; i += 5) {
+                const x = 50 + (i / 20) * (canvas.width - 70);
+                ctx.fillText(i.toString(), x - 5, canvas.height - 25);
+                
+                // Líneas de cuadrícula
+                ctx.strokeStyle = '#ccc';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(x, 20);
+                ctx.lineTo(x, canvas.height - 40);
+                ctx.stroke();
+            }
+            
+            // Marcar potencial de frenado
+            const stoppingPotentialX = 50 + (STOPPING_POTENTIAL / 20) * (canvas.width - 70);
+            ctx.strokeStyle = '#ff6b35';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(stoppingPotentialX, 20);
+            ctx.lineTo(stoppingPotentialX, canvas.height - 40);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            ctx.fillStyle = '#ff6b35';
+            ctx.font = 'bold 10px Arial';
+            ctx.fillText('1.5V', stoppingPotentialX - 10, 15);
+            
+            // Eje Y (corriente)
+            for (let i = 0; i <= 400; i += 100) {
+                const y = canvas.height - 40 - (i / 400) * (canvas.height - 60);
+                ctx.fillText(i.toString(), 25, y + 3);
+                
+                // Líneas de cuadrícula
+                ctx.strokeStyle = '#ccc';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(50, y);
+                ctx.lineTo(canvas.width - 20, y);
+                ctx.stroke();
+            }
+            
+            // Dibujar la curva de datos
+            if (graphData.length > 1) {
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                
+                for (let i = 0; i < graphData.length; i++) {
+                    const x = 50 + (graphData[i].voltage / 20) * (canvas.width - 70);
+                    const y = canvas.height - 40 - (graphData[i].current / 400) * (canvas.height - 60);
+                    
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+                
+                // Dibujar puntos en la curva
+                ctx.fillStyle = '#000';
+                for (let i = 0; i < graphData.length; i += 3) {
+                    const x = 50 + (graphData[i].voltage / 20) * (canvas.width - 70);
+                    const y = canvas.height - 40 - (graphData[i].current / 400) * (canvas.height - 60);
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, 2, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+            }
+        }
 
-  const effectiveVoltage = voltage - stoppingPotential;
-  let current = effectiveVoltage * 25;
+        function clearGraph() {
+            const canvas = document.getElementById('graph');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawGraph();
+        }
 
-  for (let n = 1; n <= 4; n++) {
-    const center = n * 4.9;
-    const distance = effectiveVoltage - center;
-    const drop = Math.exp(-Math.pow(distance * 2, 2));
-    current *= 0.2 + 0.8 * (1 - drop);
-  }
-
-  const fractional = (effectiveVoltage % 4.9) / 4.9;
-  current *= 0.3 + 0.7 * fractional;
-  current += (Math.random() - 0.5) * 5;
-
-  return Math.max(0, current);
-}
-
-function drawGraph() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#f5e6d3';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(50, canvas.height - 40);
-  ctx.lineTo(canvas.width - 20, canvas.height - 40);
-  ctx.moveTo(50, 20);
-  ctx.lineTo(50, canvas.height - 40);
-  ctx.stroke();
-
-  ctx.fillStyle = '#000';
-  ctx.font = 'bold 12px Arial';
-  ctx.fillText('Voltaje (V)', canvas.width - 110, canvas.height - 10);
-  ctx.save();
-  ctx.translate(15, canvas.height / 2);
-  ctx.rotate(-Math.PI / 2);
-  ctx.fillText('Corriente (mA)', -60, 0);
-  ctx.restore();
-
-  if (graphData.length > 1) {
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    for (let i = 0; i < graphData.length; i++) {
-      const x = 50 + (graphData[i].voltage / 20) * (canvas.width - 70);
-      const y = canvas.height - 40 - (graphData[i].current / 400) * (canvas.height - 60);
-      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    }
-    ctx.stroke();
-  }
-}
-
-function updateGraphPoint(voltage) {
-  const current = calculateCurrent(voltage);
-  graphData.push({ voltage, current });
-  if (graphData.length > 300) graphData.shift();
-  drawGraph();
-}
-
-function startAutoSweep() {
-  stopAutoSweep();
-  isAutoSweep = true;
-  voltage = 0;
-  graphData = [];
-  autoSweepInterval = setInterval(() => {
-    if (voltage > 15) {
-      stopAutoSweep();
-      return;
-    }
-    updateGraphPoint(voltage);
-    voltage += 0.1;
-    document.getElementById('voltageRange').value = voltage.toFixed(1);
-  }, 100);
-}
-
-function stopAutoSweep() {
-  isAutoSweep = false;
-  clearInterval(autoSweepInterval);
-}
-
-function resetSimulation() {
-  stopAutoSweep();
-  voltage = 0;
-  graphData = [];
-  document.getElementById('voltageRange').value = 0;
-  drawGraph();
-}
-
-function manualVoltageChange(newVoltage) {
-  if (isAutoSweep) return;
-  voltage = newVoltage;
-  graphData = [{ voltage, current: calculateCurrent(voltage) }];
-  drawGraph();
-}
-
-function handleSliderChange(value) {
-  manualVoltageChange(parseFloat(value));
-}
-
-window.onload = () => {
-  drawGraph();
-};
-</script>
+        // Inicialización
+        window.onload = function() {
             updateDisplay();
             drawGraph();
         };
