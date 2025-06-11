@@ -279,6 +279,7 @@
             max-width: 600px;
             margin-top: 20px;
             box-sizing: border-box;
+            height: 450px; /* Aumenté la altura de 350px a 450px */
         }
 
         .graph-title {
@@ -292,12 +293,12 @@
         .graph-wrapper {
             position: relative;
             width: 100%;
-            height: 350px;
+            height: 380px; /* Aumenté la altura para aprovechar el nuevo espacio */
         }
 
         #franckHertzGraph {
             width: 100%;
-            height: 100%;
+            height: 100%; /* Ahora usa el 100% del height del wrapper */
             display: block;
         }
 
@@ -686,6 +687,7 @@
                 this.maxVoltage = 16;
                 this.maxCurrent = 70;
                 
+                // Ajustar tamaño del canvas para aprovechar el nuevo espacio
                 this.adjustCanvasSize();
                 window.addEventListener('resize', () => this.adjustCanvasSize());
                 
@@ -693,6 +695,7 @@
             },
             
             adjustCanvasSize: function() {
+                // Usar el tamaño completo del contenedor padre
                 const container = this.canvas.parentElement;
                 this.canvas.width = container.clientWidth;
                 this.canvas.height = container.clientHeight;
