@@ -38,6 +38,12 @@
             justify-content: center;
         }
 
+        .left-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
         .apparatus-section {
             display: flex;
             flex-direction: column;
@@ -275,11 +281,9 @@
             background: white;
             border-radius: 20px;
             padding: 20px;
-            width: 100%;
-            max-width: 600px;
-            margin-top: 20px;
+            width: 600px;
+            height: 450px;
             box-sizing: border-box;
-            height: 450px; /* Aumenté la altura de 350px a 450px */
         }
 
         .graph-title {
@@ -293,12 +297,12 @@
         .graph-wrapper {
             position: relative;
             width: 100%;
-            height: 380px; /* Aumenté la altura para aprovechar el nuevo espacio */
+            height: 380px;
         }
 
         #franckHertzGraph {
             width: 100%;
-            height: 100%; /* Ahora usa el 100% del height del wrapper */
+            height: 100%;
             display: block;
         }
 
@@ -306,7 +310,7 @@
             opacity: 1;
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 1200px) {
             .main-content {
                 flex-direction: column;
                 align-items: center;
@@ -331,47 +335,49 @@
     </div>
 
     <div class="main-content">
-        <div class="apparatus-section">
-            <div class="apparatus-container">
-                <div class="cathode-label">CÁTODO −</div>
-                <div class="anode-label">+ ÁNODO</div>
-                
-                <div class="tube" id="tube"></div>
-                <div class="grid"></div>
-                <div class="collector"></div>
-            </div>
-
-            <div class="control-panel">
-                <div class="panel-title">POTENCIAL ACELERADOR</div>
-
-                <div class="slider-section">
-                    <div class="slider-label">Control Manual de Voltaje</div>
-                    <input type="range" class="voltage-slider" id="voltageRange" min="0" max="16" value="0" step="0.1" oninput="handleSliderChange(this.value)">
-                    <div class="voltage-display" id="voltageDisplay">0,0 V</div>
+        <div class="left-section">
+            <div class="apparatus-section">
+                <div class="apparatus-container">
+                    <div class="cathode-label">CÁTODO −</div>
+                    <div class="anode-label">+ ÁNODO</div>
+                    
+                    <div class="tube" id="tube"></div>
+                    <div class="grid"></div>
+                    <div class="collector"></div>
                 </div>
 
-                <div class="stopping-potential-info">
-                    Potencial de frenado: 1,5 V
-                </div>
+                <div class="control-panel">
+                    <div class="panel-title">POTENCIAL ACELERADOR</div>
 
-                <div id="currentInfo" class="current-info" style="display: none;">
-                    <div class="current-value" id="currentDisplay">Corriente: 0 mA</div>
-                    <div class="current-value" id="energyDisplay">Energía: 0,0 eV</div>
-                    <div class="current-value" id="excitationLevel">Nivel: 0</div>
-                </div>
+                    <div class="slider-section">
+                        <div class="slider-label">Control Manual de Voltaje</div>
+                        <input type="range" class="voltage-slider" id="voltageRange" min="0" max="16" value="0" step="0.1" oninput="handleSliderChange(this.value)">
+                        <div class="voltage-display" id="voltageDisplay">0,0 V</div>
+                    </div>
 
-                <div id="noCurrentWarning" class="no-current-warning">
-                    ⚠️ NO HAY CORRIENTE AÚN<br>
-                    <small>Supere el potencial de frenado (1,5 V)</small>
+                    <div class="stopping-potential-info">
+                        Potencial de frenado: 1,5 V
+                    </div>
+
+                    <div id="currentInfo" class="current-info" style="display: none;">
+                        <div class="current-value" id="currentDisplay">Corriente: 0 mA</div>
+                        <div class="current-value" id="energyDisplay">Energía: 0,0 eV</div>
+                        <div class="current-value" id="excitationLevel">Nivel: 0</div>
+                    </div>
+
+                    <div id="noCurrentWarning" class="no-current-warning">
+                        ⚠️ NO HAY CORRIENTE AÚN<br>
+                        <small>Supere el potencial de frenado (1,5 V)</small>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="graph-container">
-        <div class="graph-title">Curva Corriente vs Voltaje</div>
-        <div class="graph-wrapper">
-            <canvas id="franckHertzGraph"></canvas>
+        <div class="graph-container">
+            <div class="graph-title">Curva Corriente vs Voltaje</div>
+            <div class="graph-wrapper">
+                <canvas id="franckHertzGraph"></canvas>
+            </div>
         </div>
     </div>
 
