@@ -267,11 +267,12 @@
         }
 
         .graph-section {
-        background: white;
-        border-radius: 20px;
-        padding: 15px; /* Reducido de 20px */
-        width: 380px; /* Reducido de 400px */
-        margin-top: 15px; /* Reducido de 20px */
+            background: white;
+            border-radius: 20px;
+            padding: 15px; /* Reducido de 20px */
+            width: 380px; /* Reducido de 400px */
+            margin-top: 15px; /* Reducido de 20px */
+            position: relative;
         }
 
         .graph-title {
@@ -282,6 +283,10 @@
             font-size: 16px;
         }
 
+        #franckHertzGraph {
+            width: 100%;
+            height: 280px;
+        }
 
         .excitation-indicator.active {
             opacity: 1;
@@ -311,7 +316,7 @@
 
                 <div class="slider-section">
                     <div class="slider-label">Control Manual de Voltaje</div>
-                    <input type="range" class="voltage-slider" id="voltageRange" min="0" max="20" value="0" step="0.1" oninput="handleSliderChange(this.value)">
+                    <input type="range" class="voltage-slider" id="voltageRange" min="0" max="16" value="0" step="0.1" oninput="handleSliderChange(this.value)">
                     <div class="voltage-display" id="voltageDisplay">0,0 V</div>
                 </div>
 
@@ -333,8 +338,8 @@
         </div>
 
         <div class="graph-section">
-            <div class="graph-title">Franck-Hertz Data for Mercury</div>
-            <canvas id="graph" width="360" height="280"></canvas>
+            <div class="graph-title">Curva Corriente vs Voltaje</div>
+            <canvas id="franckHertzGraph" width="360" height="280"></canvas>
         </div>
     </div>
 
@@ -347,13 +352,15 @@
     </div>
 
     <script>
+        // =============================================
+        // Código original de la simulación (sin cambios)
+        // =============================================
         let electrons = [];
         let isRunning = false;
         let voltage = 0;
         let maxVoltageReached = 0;
         let electronId = 0;
         let currentMeasurement = 0;
-        let graphData = [];
         let autoSweepActive = false;
         let autoSweepInterval = null;
 
@@ -450,7 +457,6 @@
             electrons = [];
             electronId = 0;
             currentMeasurement = 0;
-            graphData = [];
             voltage = 0;
             maxVoltageReached = 0;
             
@@ -458,7 +464,7 @@
             document.getElementById('voltageRange').value = 0;
             
             updateDisplay();
-            clearGraph();
+            franckHertzGraph.resetSimulation();
         }
 
         function toggleAutoSweep() {
@@ -487,7 +493,7 @@
             
             let sweepVoltage = 0;
             autoSweepInterval = setInterval(() => {
-                if (!autoSweepActive || sweepVoltage > 20) {
+                if (!autoSweepActive || sweepVoltage > 16) {
                     stopAutoSweep();
                     return;
                 }
@@ -499,7 +505,7 @@
                 
                 updateDisplay();
                 calculateFranckHertzCurrent();
-                updateGraph();
+                franckHertzGraph.updateGraph(sweepVoltage, currentMeasurement);
                 
                 sweepVoltage += 0.1;
             }, 150);
@@ -540,7 +546,7 @@
                 
                 updateDisplay();
                 calculateFranckHertzCurrent();
-                updateGraph();
+                franckHertzGraph.updateGraph(voltage, currentMeasurement);
             } else {
                 // Restaurar el slider a la posición máxima alcanzada
                 document.getElementById('voltageRange').value = maxVoltageReached;
@@ -674,136 +680,258 @@
             requestAnimationFrame(animateElectrons);
         }
 
-        function updateGraph() {
-            graphData.push({voltage: voltage, current: currentMeasurement});
-            
-            if (graphData.length > 300) {
-                graphData.shift();
-            }
-            
-            drawGraph();
-        }
-
-        function drawGraph() {
-            const canvas = document.getElementById('graph');
-            const ctx = canvas.getContext('2d');
-            
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Fondo del gráfico
-            ctx.fillStyle = '#f5e6d3';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Dibujar ejes
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(50, canvas.height - 40);
-            ctx.lineTo(canvas.width - 20, canvas.height - 40);
-            ctx.moveTo(50, 20);
-            ctx.lineTo(50, canvas.height - 40);
-            ctx.stroke();
-            
-            // Etiquetas de los ejes
-            ctx.fillStyle = '#000';
-            ctx.font = 'bold 12px Arial';
-            ctx.fillText('Accelerating voltage', canvas.width - 140, canvas.height - 10);
-            
-            ctx.save();
-            ctx.translate(15, canvas.height / 2);
-            ctx.rotate(-Math.PI / 2);
-            ctx.fillText('Collected current (mA)', -60, 0);
-            ctx.restore();
-            
-            // Marcas en los ejes
-            ctx.font = '10px Arial';
-            ctx.fillStyle = '#000';
-            
-            // Eje X (voltaje)
-            for (let i = 0; i <= 20; i += 5) {
-                const x = 50 + (i / 20) * (canvas.width - 70);
-                ctx.fillText(i.toString(), x - 5, canvas.height - 25);
+        // =============================================
+        // Implementación del gráfico Franck-Hertz mejorado
+        // =============================================
+        const FranckHertzGraph = {
+            init: function(canvasId) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.recordedPoints = [];
+                this.maxVoltage = 16;
+                this.maxCurrent = 70;
                 
-                // Líneas de cuadrícula
-                ctx.strokeStyle = '#ccc';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(x, 20);
-                ctx.lineTo(x, canvas.height - 40);
-                ctx.stroke();
-            }
-            
-            // Marcar potencial de frenado
-            const stoppingPotentialX = 50 + (STOPPING_POTENTIAL / 20) * (canvas.width - 70);
-            ctx.strokeStyle = '#ff6b35';
-            ctx.lineWidth = 2;
-            ctx.setLineDash([5, 5]);
-            ctx.beginPath();
-            ctx.moveTo(stoppingPotentialX, 20);
-            ctx.lineTo(stoppingPotentialX, canvas.height - 40);
-            ctx.stroke();
-            ctx.setLineDash([]);
-            
-            ctx.fillStyle = '#ff6b35';
-            ctx.font = 'bold 10px Arial';
-            ctx.fillText('1.5V', stoppingPotentialX - 10, 15);
-            
-            // Eje Y (corriente)
-            for (let i = 0; i <= 400; i += 100) {
-                const y = canvas.height - 40 - (i / 400) * (canvas.height - 60);
-                ctx.fillText(i.toString(), 25, y + 3);
+                // Puntos exactos del experimento Franck-Hertz para mercurio
+                this.exactPoints = [
+                    { V: 0.0, I: 0 },
+                    { V: 1.0, I: 0 },
+                    { V: 3.0, I: 15 },
+                    { V: 4.0, I: 35 },
+                    { V: 4.9, I: 52 },  // Primer pico
+                    { V: 5.3, I: 25 },
+                    { V: 6.0, I: 18 },
+                    { V: 7.5, I: 28 },
+                    { V: 9.0, I: 45 },
+                    { V: 9.8, I: 58 },  // Segundo pico
+                    { V: 10.4, I: 30 },
+                    { V: 11.2, I: 22 },
+                    { V: 12.5, I: 35 },
+                    { V: 14.0, I: 55 },
+                    { V: 14.7, I: 63 }, // Tercer pico
+                    { V: 15.2, I: 40 },
+                    { V: 16.0, I: 30 }
+                ];
                 
-                // Líneas de cuadrícula
-                ctx.strokeStyle = '#ccc';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(50, y);
-                ctx.lineTo(canvas.width - 20, y);
-                ctx.stroke();
-            }
+                this.drawAxes();
+            },
             
-            // Dibujar la curva de datos
-            if (graphData.length > 1) {
-                ctx.strokeStyle = '#000';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
+            resetSimulation: function() {
+                this.recordedPoints = [];
+                this.drawAxes();
+            },
+            
+            updateGraph: function(V, I) {
+                // Verificar si este voltaje ya fue registrado
+                const exists = this.recordedPoints.some(point => Math.abs(point.V - V) < 0.1);
+                if (exists) return;
                 
-                for (let i = 0; i < graphData.length; i++) {
-                    const x = 50 + (graphData[i].voltage / 20) * (canvas.width - 70);
-                    const y = canvas.height - 40 - (graphData[i].current / 400) * (canvas.height - 60);
-                    
-                    if (i === 0) {
-                        ctx.moveTo(x, y);
-                    } else {
-                        ctx.lineTo(x, y);
+                // Añadir a los puntos registrados
+                this.recordedPoints.push({ V, I });
+                
+                // Redibujar todo
+                this.drawAxes();
+                this.drawSmoothGraph();
+            },
+            
+            getCurrentForVoltage: function(V) {
+                // Encontrar los puntos adyacentes
+                let prevPoint = this.exactPoints[0];
+                let nextPoint = this.exactPoints[this.exactPoints.length - 1];
+                
+                for (let i = 1; i < this.exactPoints.length; i++) {
+                    if (this.exactPoints[i].V >= V) {
+                        prevPoint = this.exactPoints[i - 1];
+                        nextPoint = this.exactPoints[i];
+                        break;
                     }
                 }
-                ctx.stroke();
                 
-                // Dibujar puntos en la curva
-                ctx.fillStyle = '#000';
-                for (let i = 0; i < graphData.length; i += 3) {
-                    const x = 50 + (graphData[i].voltage / 20) * (canvas.width - 70);
-                    const y = canvas.height - 40 - (graphData[i].current / 400) * (canvas.height - 60);
+                // Si estamos exactamente en un punto exacto
+                if (Math.abs(V - prevPoint.V) < 0.01) return prevPoint.I;
+                if (Math.abs(V - nextPoint.V) < 0.01) return nextPoint.I;
+                
+                // Interpolación cúbica suave
+                const t = (V - prevPoint.V) / (nextPoint.V - prevPoint.V);
+                const t2 = t * t;
+                const t3 = t2 * t;
+                
+                // Usamos tangentes para suavizar
+                const m = 0.5 * (nextPoint.I - prevPoint.I);
+                
+                return (2 * t3 - 3 * t2 + 1) * prevPoint.I + 
+                       (t3 - 2 * t2 + t) * m + 
+                       (-2 * t3 + 3 * t2) * nextPoint.I;
+            },
+            
+            drawAxes: function() {
+                const margin = { left: 50, top: 20, right: 30, bottom: 40 };
+                const graphWidth = this.canvas.width - margin.left - margin.right;
+                const graphHeight = this.canvas.height - margin.top - margin.bottom;
+                
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Dibujar cuadrícula
+                this.ctx.strokeStyle = '#e0e0e0';
+                this.ctx.lineWidth = 1;
+                
+                // Líneas verticales (voltaje)
+                for (let v = 0; v <= this.maxVoltage; v += 1) {
+                    const x = margin.left + (v / this.maxVoltage) * graphWidth;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, margin.top);
+                    this.ctx.lineTo(x, margin.top + graphHeight);
+                    this.ctx.stroke();
                     
-                    ctx.beginPath();
-                    ctx.arc(x, y, 2, 0, 2 * Math.PI);
-                    ctx.fill();
+                    // Etiquetas de voltaje
+                    if (v % 2 === 0) {
+                        this.ctx.fillStyle = '#555';
+                        this.ctx.textAlign = 'center';
+                        this.ctx.font = '12px Arial';
+                        this.ctx.fillText(v + ' V', x, margin.top + graphHeight + 15);
+                    }
+                }
+                
+                // Líneas horizontales (corriente)
+                for (let i = 0; i <= this.maxCurrent; i += 10) {
+                    const y = margin.top + graphHeight - (i / this.maxCurrent) * graphHeight;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(margin.left, y);
+                    this.ctx.lineTo(margin.left + graphWidth, y);
+                    this.ctx.stroke();
+                    
+                    // Etiquetas de corriente (solo algunas para evitar superposición)
+                    if (i % 20 === 0) {
+                        this.ctx.fillStyle = '#555';
+                        this.ctx.textAlign = 'right';
+                        this.ctx.font = '12px Arial';
+                        this.ctx.fillText(i + ' µA', margin.left - 10, y + 5);
+                    }
+                }
+                
+                // Dibujar ejes principales
+                this.ctx.strokeStyle = '#000';
+                this.ctx.lineWidth = 2;
+                
+                // Eje X (Voltaje)
+                this.ctx.beginPath();
+                this.ctx.moveTo(margin.left, margin.top + graphHeight);
+                this.ctx.lineTo(margin.left + graphWidth, margin.top + graphHeight);
+                this.ctx.stroke();
+                
+                // Eje Y (Corriente)
+                this.ctx.beginPath();
+                this.ctx.moveTo(margin.left, margin.top);
+                this.ctx.lineTo(margin.left, margin.top + graphHeight);
+                this.ctx.stroke();
+                
+                // Etiquetas de los ejes
+                this.ctx.fillStyle = '#000';
+                this.ctx.textAlign = 'center';
+                this.ctx.font = '14px Arial';
+                this.ctx.fillText('Voltaje (V)', margin.left + graphWidth / 2, margin.top + graphHeight + 30);
+                
+                this.ctx.save();
+                this.ctx.translate(margin.left - 30, margin.top + graphHeight / 2);
+                this.ctx.rotate(-Math.PI / 2);
+                this.ctx.fillText('Corriente (µA)', 0, 0);
+                this.ctx.restore();
+                
+                // Marcar potencial de frenado
+                const stoppingX = margin.left + (STOPPING_POTENTIAL / this.maxVoltage) * graphWidth;
+                this.ctx.strokeStyle = '#ff6b35';
+                this.ctx.setLineDash([5, 3]);
+                this.ctx.beginPath();
+                this.ctx.moveTo(stoppingX, margin.top);
+                this.ctx.lineTo(stoppingX, margin.top + graphHeight);
+                this.ctx.stroke();
+                this.ctx.setLineDash([]);
+                
+                this.ctx.fillStyle = '#ff6b35';
+                this.ctx.font = 'bold 12px Arial';
+                this.ctx.fillText('1.5 V', stoppingX - 15, margin.top + graphHeight + 30);
+            },
+            
+            drawSmoothGraph: function() {
+                if (this.recordedPoints.length < 2) return;
+                
+                const margin = { left: 50, top: 20, right: 30, bottom: 40 };
+                const graphWidth = this.canvas.width - margin.left - margin.right;
+                const graphHeight = this.canvas.height - margin.top - margin.bottom;
+                
+                // Ordenar puntos por voltaje
+                this.recordedPoints.sort((a, b) => a.V - b.V);
+                
+                // Dibujar línea suave
+                this.ctx.strokeStyle = '#2c7be5';
+                this.ctx.lineWidth = 3;
+                this.ctx.beginPath();
+                
+                // Mover al primer punto
+                const firstPoint = this.recordedPoints[0];
+                const firstX = margin.left + (firstPoint.V / this.maxVoltage) * graphWidth;
+                const firstY = margin.top + graphHeight - (firstPoint.I / this.maxCurrent) * graphHeight;
+                this.ctx.moveTo(firstX, firstY);
+                
+                // Dibujar segmentos suaves con curvas de Bézier
+                for (let i = 1; i < this.recordedPoints.length; i++) {
+                    const prevPoint = this.recordedPoints[i-1];
+                    const point = this.recordedPoints[i];
+                    
+                    const x0 = margin.left + (prevPoint.V / this.maxVoltage) * graphWidth;
+                    const y0 = margin.top + graphHeight - (prevPoint.I / this.maxCurrent) * graphHeight;
+                    const x1 = margin.left + (point.V / this.maxVoltage) * graphWidth;
+                    const y1 = margin.top + graphHeight - (point.I / this.maxCurrent) * graphHeight;
+                    
+                    // Punto de control (promedio entre los puntos)
+                    const cpx = (x0 + x1) / 2;
+                    const cpy = (y0 + y1) / 2;
+                    
+                    this.ctx.quadraticCurveTo(cpx, cpy, x1, y1);
+                }
+                
+                this.ctx.stroke();
+                
+                // Dibujar solo los puntos clave
+                this.ctx.fillStyle = '#ff7a00';
+                this.ctx.strokeStyle = '#fff';
+                this.ctx.lineWidth = 2;
+                
+                const keyVoltages = [0, 4.9, 9.8, 14.7, 16];
+                for (const point of this.recordedPoints) {
+                    if (keyVoltages.some(v => Math.abs(v - point.V) < 0.1)) {
+                        const x = margin.left + (point.V / this.maxVoltage) * graphWidth;
+                        const y = margin.top + graphHeight - (point.I / this.maxCurrent) * graphHeight;
+                        
+                        this.ctx.beginPath();
+                        this.ctx.arc(x, y, 5, 0, Math.PI * 2);
+                        this.ctx.fill();
+                        this.ctx.stroke();
+                        
+                        // Etiquetar puntos clave (con posición ajustada para evitar superposición)
+                        if (point.V === 4.9 || point.V === 9.8 || point.V === 14.7) {
+                            this.ctx.fillStyle = '#333';
+                            this.ctx.textAlign = 'center';
+                            this.ctx.font = 'bold 12px Arial';
+                            
+                            // Ajustar posición vertical según el pico
+                            let labelY = y - 15;
+                            if (point.V === 9.8) labelY = y - 25; // Mover más arriba el segundo pico
+                            
+                            this.ctx.fillText(`${point.V} V`, x, labelY);
+                            this.ctx.fillStyle = '#ff7a00';
+                        }
+                    }
                 }
             }
-        }
-
-        function clearGraph() {
-            const canvas = document.getElementById('graph');
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawGraph();
-        }
+        };
 
         // Inicialización
         window.onload = function() {
+            // Inicializar el gráfico Franck-Hertz
+            franckHertzGraph = Object.create(FranckHertzGraph);
+            franckHertzGraph.init('franckHertzGraph');
+            
             updateDisplay();
-            drawGraph();
         };
     </script>
 </body>
