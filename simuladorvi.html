@@ -82,7 +82,7 @@
         .grid {
             position: absolute;
             left: 350px;
-            top: 35px;
+            top: 30px; /* Cambiado de 35px (sube 5px) */
             width: 3px;
             height: 60px;
             background: transparent;
@@ -93,7 +93,7 @@
         .collector {
             position: absolute;
             right: 120px;
-            top: 35px;
+            top: 30px; /* Cambiado de 35px (sube 5px) */
             width: 12px;
             height: 60px;
             background: #2c5aa0;
@@ -244,6 +244,14 @@
         button:disabled {
             background: #9ca3af;
             cursor: not-allowed;
+        }
+        .quiz-btn {
+            background: #f59e0b; /* naranja */
+            color: white;
+        }    
+
+        .quiz-btn:hover {
+            background: #d97706; /* naranja oscuro al pasar el mouse */
         }
 
         .auto-sweep-btn {
