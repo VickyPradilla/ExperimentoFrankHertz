@@ -6,59 +6,60 @@
     <title>Experimento de Franck-Hertz</title>
     <style>
         body {
-            margin: 0;
-            padding: 30px;
-            background: linear-gradient(135deg, #a8c8ec, #b8d4f0);
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
+        margin: 0;
+        padding: 15px 30px; /* Reducido padding vertical */
+        background: linear-gradient(135deg, #a8c8ec, #b8d4f0);
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: auto; /* Cambiado de 100vh */
+        overflow: hidden; /* Previene el scroll */
+    }
 
-        .container {
-            text-align: center;
-            margin-bottom: 0px;
-        }
+    .container {
+        text-align: center;
+        margin-bottom: 5px; /* Reducido */
+    }
 
-        h1 {
-            color: #2c5aa0;
-            margin-bottom: 10px;
-            font-size: 28px;
-            font-weight: bold;
-        }
+    h1 {
+        color: #2c5aa0;
+        margin-bottom: 8px; /* Reducido */
+        font-size: 28px;
+        font-weight: bold;
+    }
 
-        .main-content {
-            display: flex;
-            gap: 30px;
-            align-items: flex-start;
-            margin: 0px 0;
-        }
+    .main-content {
+        display: flex;
+        gap: 20px; /* Reducido de 30px */
+        align-items: flex-start;
+        margin: 5px 0; /* Reducido */
+    }
 
-        .apparatus-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-        }
+    .apparatus-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px; /* Reducido de 20px */
+    }
 
-        .apparatus-container {
-            position: relative;
-            width: 600px;
-            height: 150px;
-        }
+    .apparatus-container {
+        position: relative;
+        width: 580px; /* Reducido de 600px */
+        height: 130px; /* Reducido de 150px */
+    }
 
-        .tube {
-            position: absolute;
-            top: 25px;
-            left: 100px;
-            width: 400px;
-            height: 80px;
-            background: linear-gradient(45deg, #c4d63a, #a8c030);
-            border-radius: 40px;
-            border: 2px solid #8fa025;
-            overflow: hidden;
-        }
+    .tube {
+        position: absolute;
+        top: 20px; /* Ajustado de 25px */
+        left: 90px; /* Ajustado de 100px */
+        width: 380px; /* Reducido de 400px */
+        height: 70px; /* Reducido de 80px */
+        background: linear-gradient(45deg, #c4d63a, #a8c030);
+        border-radius: 40px;
+        border: 2px solid #8fa025;
+        overflow: hidden;
+    }
 
         .cathode-label {
             position: absolute;
@@ -258,11 +259,11 @@
         }
 
         .graph-section {
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-            width: 400px;
-            margin-top: 20px;
+        background: white;
+        border-radius: 20px;
+        padding: 15px; /* Reducido de 20px */
+        width: 380px; /* Reducido de 400px */
+        margin-top: 15px; /* Reducido de 20px */
         }
 
         .graph-title {
