@@ -89,12 +89,19 @@
             font-size: 14px;
             color: #666;
         }
+        
+        .peaks-info {
+            background-color: #f0f8ff;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Experimento de Franck y Hertz</h1>
-        <p>Simulación de la gráfica Corriente (I) vs Voltaje (V)</p>
+        <h1>Experimento de Franck y Hertz - Mercurio</h1>
+        <p>Gráfica Corriente (I) vs Voltaje (V) mostrando los picos de excitación</p>
         
         <div class="graph-container">
             <canvas id="graphCanvas" width="750" height="400"></canvas>
@@ -114,12 +121,21 @@
             </div>
         </div>
         
-        <div class="info">
-            <p>Instrucciones:</p>
+        <div class="peaks-info">
+            <p><strong>Picos característicos del mercurio:</strong></p>
             <ul>
-                <li><strong>Barrido Automático:</strong> La simulación recorre automáticamente todos los valores de voltaje.</li>
-                <li><strong>Modo Manual:</strong> Mueve el deslizador para cambiar el voltaje manualmente.</li>
-                <li>Los puntos naranja representan las mediciones de corriente para cada voltaje aplicado.</li>
+                <li>Primer pico: ~4.9 V (energía de excitación fundamental)</li>
+                <li>Segundo pico: ~9.8 V (2× energía de excitación)</li>
+                <li>Tercer pico: ~14.7 V (3× energía de excitación)</li>
+            </ul>
+        </div>
+        
+        <div class="info">
+            <p>Interpretación:</p>
+            <ul>
+                <li>Los <strong>máximos</strong> indican voltajes donde no hay pérdida de energía por colisión inelástica.</li>
+                <li>Los <strong>valles</strong> representan voltajes donde ocurren colisiones inelásticas que reducen la corriente.</li>
+                <li>La separación entre picos (~4.9V) revela la energía de excitación del mercurio.</li>
             </ul>
         </div>
     </div>
@@ -143,37 +159,53 @@
         let recordedPoints = [];
         
         // Configuración del gráfico
-        const margin = 40;
+        const margin = 50;
         const graphWidth = canvas.width - 2 * margin;
         const graphHeight = canvas.height - 2 * margin;
         
-        // Función para generar datos del experimento Franck-Hertz
-        function generateFranckHertzData(V) {
-            // Esta función simula el comportamiento típico del experimento
-            // con picos aproximadamente cada 4.9V (valor del mercurio)
-            const peaksAt = 4.9;
-            const numPeaks = Math.floor(V / peaksAt);
-            const baseCurrent = 0.5 + 0.3 * Math.random();
+        // Puntos clave del experimento (basados en tus datos)
+        const keyPoints = [
+            { V: 0.0, I: 0.0 },
+            { V: 3.0, I: 0.4 },
+            { V: 4.0, I: 1.2 },
+            { V: 4.9, I: 3.0 },  // Primer pico
+            { V: 5.3, I: 2.5 },
+            { V: 6.0, I: 1.0 },
+            { V: 7.5, I: 1.3 },
+            { V: 9.0, I: 2.5 },
+            { V: 9.8, I: 3.2 },  // Segundo pico
+            { V: 10.4, I: 2.7 },
+            { V: 11.2, I: 1.4 },
+            { V: 12.5, I: 1.8 },
+            { V: 14.0, I: 2.8 },
+            { V: 14.7, I: 3.4 },  // Tercer pico
+            { V: 15.2, I: 2.9 },
+            { V: 16.0, I: 1.8 },
+            { V: 17.0, I: 2.0 },
+            { V: 18.0, I: 2.3 },
+            { V: 19.0, I: 2.6 },
+            { V: 20.0, I: 2.9 }
+        ];
+        
+        // Función para interpolar entre los puntos clave
+        function getCurrentForVoltage(V) {
+            // Encontrar los puntos adyacentes
+            let prevPoint = keyPoints[0];
+            let nextPoint = keyPoints[keyPoints.length - 1];
             
-            // Corriente base con ruido
-            let I = baseCurrent + 0.1 * Math.sin(V * 0.8) + 0.05 * (Math.random() - 0.5);
-            
-            // Efecto de los picos
-            for (let i = 1; i <= numPeaks; i++) {
-                const peakCenter = i * peaksAt;
-                const distanceToPeak = Math.abs(V - peakCenter);
-                
-                if (distanceToPeak < 1.5) {
-                    // Añadir un pico
-                    I += 1.5 * Math.exp(-distanceToPeak * distanceToPeak / 0.5);
-                } else if (distanceToPeak < 3) {
-                    // Valle después del pico
-                    I -= 0.3 * Math.exp(-(distanceToPeak - 1.5) * (distanceToPeak - 1.5) / 1.0);
+            for (let i = 1; i < keyPoints.length; i++) {
+                if (keyPoints[i].V >= V) {
+                    prevPoint = keyPoints[i - 1];
+                    nextPoint = keyPoints[i];
+                    break;
                 }
             }
             
-            // Asegurar que la corriente no sea negativa
-            return Math.max(0, I);
+            // Interpolación lineal
+            if (prevPoint.V === nextPoint.V) return prevPoint.I;
+            
+            const ratio = (V - prevPoint.V) / (nextPoint.V - prevPoint.V);
+            return prevPoint.I + ratio * (nextPoint.I - prevPoint.I);
         }
         
         // Dibujar ejes y cuadrícula
@@ -185,7 +217,7 @@
             ctx.lineWidth = 1;
             
             // Líneas verticales (voltaje)
-            for (let v = 0; v <= 20; v += 2) {
+            for (let v = 0; v <= 20; v += 1) {
                 const x = margin + (v / 20) * graphWidth;
                 ctx.beginPath();
                 ctx.moveTo(x, margin);
@@ -193,16 +225,17 @@
                 ctx.stroke();
                 
                 // Etiquetas de voltaje
-                if (v % 4 === 0) {
+                if (v % 2 === 0) {
                     ctx.fillStyle = '#333';
                     ctx.textAlign = 'center';
+                    ctx.font = '12px Arial';
                     ctx.fillText(v + 'V', x, margin + graphHeight + 20);
                 }
             }
             
             // Líneas horizontales (corriente)
-            for (let i = 0; i <= 5; i += 0.5) {
-                const y = margin + graphHeight - (i / 5) * graphHeight;
+            for (let i = 0; i <= 4; i += 0.5) {
+                const y = margin + graphHeight - (i / 4) * graphHeight;
                 ctx.beginPath();
                 ctx.moveTo(margin, y);
                 ctx.lineTo(margin + graphWidth, y);
@@ -212,7 +245,8 @@
                 if (i % 1 === 0) {
                     ctx.fillStyle = '#333';
                     ctx.textAlign = 'right';
-                    ctx.fillText(i.toFixed(1) + 'µA', margin - 10, y + 5);
+                    ctx.font = '12px Arial';
+                    ctx.fillText(i.toFixed(1) + ' µA', margin - 10, y + 5);
                 }
             }
             
@@ -235,10 +269,11 @@
             // Etiquetas de los ejes
             ctx.fillStyle = '#000';
             ctx.textAlign = 'center';
-            ctx.fillText('Voltaje (V)', canvas.width / 2, canvas.height - 5);
+            ctx.font = '14px Arial';
+            ctx.fillText('Voltaje (V)', canvas.width / 2, canvas.height - 10);
             
             ctx.save();
-            ctx.translate(20, canvas.height / 2);
+            ctx.translate(25, canvas.height / 2);
             ctx.rotate(-Math.PI / 2);
             ctx.fillText('Corriente (µA)', 0, 0);
             ctx.restore();
@@ -248,7 +283,7 @@
         function drawGraph() {
             if (recordedPoints.length === 0) return;
             
-            // Ordenar puntos por voltaje (por si acaso)
+            // Ordenar puntos por voltaje
             recordedPoints.sort((a, b) => a.V - b.V);
             
             // Dibujar línea
@@ -258,13 +293,13 @@
             
             const firstPoint = recordedPoints[0];
             const x = margin + (firstPoint.V / 20) * graphWidth;
-            const y = margin + graphHeight - (firstPoint.I / 5) * graphHeight;
+            const y = margin + graphHeight - (firstPoint.I / 4) * graphHeight;
             ctx.moveTo(x, y);
             
             for (let i = 1; i < recordedPoints.length; i++) {
                 const point = recordedPoints[i];
                 const x = margin + (point.V / 20) * graphWidth;
-                const y = margin + graphHeight - (point.I / 5) * graphHeight;
+                const y = margin + graphHeight - (point.I / 4) * graphHeight;
                 ctx.lineTo(x, y);
             }
             
@@ -274,11 +309,42 @@
             ctx.fillStyle = '#FF8C00'; // Naranja
             for (const point of recordedPoints) {
                 const x = margin + (point.V / 20) * graphWidth;
-                const y = margin + graphHeight - (point.I / 5) * graphHeight;
+                const y = margin + graphHeight - (point.I / 4) * graphHeight;
                 
                 ctx.beginPath();
                 ctx.arc(x, y, 4, 0, Math.PI * 2);
                 ctx.fill();
+            }
+            
+            // Marcar los picos importantes
+            const peaks = [
+                { V: 4.9, label: "1er pico (4.9V)" },
+                { V: 9.8, label: "2do pico (9.8V)" },
+                { V: 14.7, label: "3er pico (14.7V)" }
+            ];
+            
+            ctx.fillStyle = '#333';
+            ctx.textAlign = 'center';
+            ctx.font = '12px Arial';
+            
+            for (const peak of peaks) {
+                const point = recordedPoints.find(p => Math.abs(p.V - peak.V) < 0.2);
+                if (point) {
+                    const x = margin + (point.V / 20) * graphWidth;
+                    const y = margin + graphHeight - (point.I / 4) * graphHeight;
+                    
+                    // Dibujar línea punteada hasta el pico
+                    ctx.setLineDash([2, 2]);
+                    ctx.strokeStyle = '#888';
+                    ctx.beginPath();
+                    ctx.moveTo(x, margin + graphHeight);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    
+                    // Etiqueta del pico
+                    ctx.fillText(peak.label, x, y - 15);
+                }
             }
         }
         
@@ -288,8 +354,8 @@
             const exists = recordedPoints.some(point => Math.abs(point.V - V) < 0.1);
             if (exists) return;
             
-            // Generar dato de corriente para este voltaje
-            const I = generateFranckHertzData(V);
+            // Obtener corriente para este voltaje
+            const I = getCurrentForVoltage(V);
             
             // Añadir a los puntos registrados
             recordedPoints.push({ V, I });
