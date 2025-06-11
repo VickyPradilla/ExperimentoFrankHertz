@@ -14,7 +14,7 @@
             flex-direction: column;
             align-items: center;
             min-height: auto;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
         .container {
@@ -34,6 +34,8 @@
             gap: 20px;
             align-items: flex-start;
             margin: 5px 0;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .apparatus-section {
@@ -269,12 +271,13 @@
             background: #e74c3c;
         }
 
-        .graph-section {
+        .graph-container {
             background: white;
             border-radius: 20px;
-            padding: 15px;
-            width: 380px;
-            margin-top: 15px;
+            padding: 20px;
+            width: 100%;
+            max-width: 600px;
+            margin-top: 20px;
             box-sizing: border-box;
         }
 
@@ -283,18 +286,40 @@
             font-weight: bold;
             margin-bottom: 15px;
             color: #2c5aa0;
-            font-size: 16px;
+            font-size: 18px;
+        }
+
+        .graph-wrapper {
+            position: relative;
+            width: 100%;
+            height: 350px;
         }
 
         #franckHertzGraph {
             width: 100%;
-            height: 280px;
+            height: 100%;
             display: block;
-            margin: 0 auto;
         }
 
         .excitation-indicator.active {
             opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .apparatus-container {
+                width: 100%;
+                max-width: 580px;
+            }
+            
+            .graph-container {
+                width: 100%;
+                max-width: 100%;
+            }
         }
     </style>
 </head>
@@ -340,10 +365,12 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="graph-section">
-            <div class="graph-title">Curva Corriente vs Voltaje</div>
-            <canvas id="franckHertzGraph" width="360" height="280"></canvas>
+    <div class="graph-container">
+        <div class="graph-title">Curva Corriente vs Voltaje</div>
+        <div class="graph-wrapper">
+            <canvas id="franckHertzGraph"></canvas>
         </div>
     </div>
 
@@ -667,16 +694,8 @@
             
             adjustCanvasSize: function() {
                 const container = this.canvas.parentElement;
-                const containerWidth = container.clientWidth - 30;
-                
-                const aspectRatio = 360 / 280;
-                const newWidth = Math.min(containerWidth, 400);
-                const newHeight = newWidth / aspectRatio;
-                
-                this.canvas.width = newWidth;
-                this.canvas.height = newHeight;
-                this.canvas.style.width = newWidth + 'px';
-                this.canvas.style.height = newHeight + 'px';
+                this.canvas.width = container.clientWidth;
+                this.canvas.height = container.clientHeight;
                 
                 if(this.recordedPoints.length > 0) {
                     this.drawAxes();
@@ -700,18 +719,21 @@
             },
             
             drawAxes: function() {
-                const margin = { left: 40, top: 20, right: 30, bottom: 40 };
+                const margin = { left: 60, top: 30, right: 40, bottom: 50 };
                 const graphWidth = this.canvas.width - margin.left - margin.right;
                 const graphHeight = this.canvas.height - margin.top - margin.bottom;
                 
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
                 
+                // Fondo blanco
                 this.ctx.fillStyle = 'white';
                 this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
                 
+                // Dibujar cuadrícula
                 this.ctx.strokeStyle = '#e0e0e0';
                 this.ctx.lineWidth = 1;
                 
+                // Líneas verticales (voltaje)
                 for (let v = 0; v <= this.maxVoltage; v += 1) {
                     const x = margin.left + (v / this.maxVoltage) * graphWidth;
                     this.ctx.beginPath();
@@ -719,14 +741,16 @@
                     this.ctx.lineTo(x, margin.top + graphHeight);
                     this.ctx.stroke();
                     
+                    // Etiquetas de voltaje
                     if (v % 2 === 0) {
                         this.ctx.fillStyle = '#555';
                         this.ctx.textAlign = 'center';
-                        this.ctx.font = '10px Arial';
-                        this.ctx.fillText(v + ' V', x, margin.top + graphHeight + 15);
+                        this.ctx.font = '12px Arial';
+                        this.ctx.fillText(v + ' V', x, margin.top + graphHeight + 20);
                     }
                 }
                 
+                // Líneas horizontales (corriente)
                 const currentSteps = [0, 20, 40, 60];
                 for (let i of currentSteps) {
                     const y = margin.top + graphHeight - (i / this.maxCurrent) * graphHeight;
@@ -735,36 +759,42 @@
                     this.ctx.lineTo(margin.left + graphWidth, y);
                     this.ctx.stroke();
                     
+                    // Etiquetas de corriente
                     this.ctx.fillStyle = '#555';
                     this.ctx.textAlign = 'right';
-                    this.ctx.font = '10px Arial';
+                    this.ctx.font = '12px Arial';
                     this.ctx.fillText(i + ' µA', margin.left - 10, y + 5);
                 }
                 
+                // Dibujar ejes principales
                 this.ctx.strokeStyle = '#000';
                 this.ctx.lineWidth = 2;
                 
+                // Eje X (Voltaje)
                 this.ctx.beginPath();
                 this.ctx.moveTo(margin.left, margin.top + graphHeight);
                 this.ctx.lineTo(margin.left + graphWidth, margin.top + graphHeight);
                 this.ctx.stroke();
                 
+                // Eje Y (Corriente)
                 this.ctx.beginPath();
                 this.ctx.moveTo(margin.left, margin.top);
                 this.ctx.lineTo(margin.left, margin.top + graphHeight);
                 this.ctx.stroke();
                 
+                // Etiquetas de los ejes
                 this.ctx.fillStyle = '#000';
                 this.ctx.textAlign = 'center';
-                this.ctx.font = '12px Arial';
-                this.ctx.fillText('Voltaje (V)', margin.left + graphWidth / 2, margin.top + graphHeight + 30);
+                this.ctx.font = '14px Arial';
+                this.ctx.fillText('Voltaje (V)', margin.left + graphWidth / 2, margin.top + graphHeight + 40);
                 
                 this.ctx.save();
-                this.ctx.translate(margin.left - 25, margin.top + graphHeight / 2);
+                this.ctx.translate(margin.left - 30, margin.top + graphHeight / 2);
                 this.ctx.rotate(-Math.PI / 2);
                 this.ctx.fillText('Corriente (µA)', 0, 0);
                 this.ctx.restore();
                 
+                // Marcar potencial de frenado
                 const stoppingX = margin.left + (STOPPING_POTENTIAL / this.maxVoltage) * graphWidth;
                 this.ctx.strokeStyle = '#ff6b35';
                 this.ctx.setLineDash([5, 3]);
@@ -776,18 +806,19 @@
                 
                 this.ctx.fillStyle = '#ff6b35';
                 this.ctx.font = 'bold 12px Arial';
-                this.ctx.fillText('1.5 V', stoppingX - 15, margin.top + graphHeight + 30);
+                this.ctx.fillText('1.5 V', stoppingX - 15, margin.top + graphHeight + 40);
             },
             
             drawSmoothGraph: function() {
                 if (this.recordedPoints.length < 2) return;
                 
-                const margin = { left: 40, top: 20, right: 30, bottom: 40 };
+                const margin = { left: 60, top: 30, right: 40, bottom: 50 };
                 const graphWidth = this.canvas.width - margin.left - margin.right;
                 const graphHeight = this.canvas.height - margin.top - margin.bottom;
                 
                 this.recordedPoints.sort((a, b) => a.V - b.V);
                 
+                // Dibujar línea suave
                 this.ctx.strokeStyle = '#2c7be5';
                 this.ctx.lineWidth = 3;
                 this.ctx.beginPath();
@@ -814,6 +845,7 @@
                 
                 this.ctx.stroke();
                 
+                // Dibujar puntos clave
                 this.ctx.fillStyle = '#ff7a00';
                 this.ctx.strokeStyle = '#fff';
                 this.ctx.lineWidth = 2;
@@ -829,6 +861,7 @@
                         this.ctx.fill();
                         this.ctx.stroke();
                         
+                        // Etiquetar puntos clave
                         if (point.V === 4.9 || point.V === 9.8 || point.V === 14.7) {
                             this.ctx.fillStyle = '#333';
                             this.ctx.textAlign = 'center';
