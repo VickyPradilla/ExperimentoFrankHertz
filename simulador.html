@@ -339,8 +339,6 @@
     </div>
 
     <div class="controls">
-        <button onclick="startSimulation()" id="startBtn">Iniciar</button>
-        <button onclick="stopSimulation()" id="stopBtn" disabled>Detener</button>
         <button onclick="resetSimulation()" id="resetBtn">Reiniciar</button>
         <button onclick="toggleAutoSweep()" id="autoSweepBtn" class="auto-sweep-btn">Barrido Automático</button>
         <button onclick="window.location.href='quiz.html'" class="quiz-btn">Tomar Quiz</button>
@@ -414,20 +412,7 @@
                 indicator.classList.remove('active');
             }, 300);
         }
-
-        function startSimulation() {
-            isRunning = true;
-            document.getElementById('startBtn').disabled = true;
-            document.getElementById('stopBtn').disabled = false;
-            animateElectrons();
-            createElectronsPeriodically();
-        }
-
-        function stopSimulation() {
-            isRunning = false;
-            document.getElementById('startBtn').disabled = false;
-            document.getElementById('stopBtn').disabled = true;
-        }
+        
 
         function resetSimulation() {
             // Detener barrido automático si está activo
