@@ -23,6 +23,7 @@
             text-align: center;
             color: #555;
             margin-bottom: 20px;
+            font-size: 14px;
         }
         
         .container {
@@ -42,18 +43,22 @@
         canvas {
             background-color: white;
             border: 1px solid #ddd;
+            display: block;
+            margin: 0 auto;
         }
         
         .controls {
             display: flex;
             flex-direction: column;
             gap: 15px;
+            margin-top: 20px;
         }
         
         .slider-container {
             display: flex;
             align-items: center;
             gap: 10px;
+            margin: 0 20px;
         }
         
         .slider {
@@ -67,6 +72,7 @@
             gap: 15px;
             margin-bottom: 10px;
             justify-content: center;
+            flex-wrap: wrap;
         }
         
         button {
@@ -78,6 +84,7 @@
             cursor: pointer;
             font-size: 14px;
             transition: background-color 0.2s;
+            min-width: 160px;
         }
         
         button:hover {
@@ -103,6 +110,7 @@
             background-color: #f8fafd;
             border-radius: 8px;
             border-left: 4px solid #2c7be5;
+            font-size: 14px;
         }
         
         .peaks-info {
@@ -132,10 +140,10 @@
 <body>
     <div class="container">
         <h1>Experimento de Franck y Hertz</h1>
-        <p class="subtitle">Simulación de la curva Corriente vs Voltaje en vapor de mercurio</p>
+        <p class="subtitle">Curva Corriente vs Voltaje en vapor de mercurio</p>
         
         <div class="graph-container">
-            <canvas id="graphCanvas" width="750" height="450"></canvas>
+            <canvas id="graphCanvas" width="700" height="450"></canvas>
         </div>
         
         <div class="controls">
@@ -171,7 +179,7 @@
         </div>
         
         <div class="info-box">
-            <p>La gráfica muestra los picos característicos cada ~4.9V, correspondientes a la energía de excitación del mercurio. Los máximos ocurren cuando los electrones han ganado exactamente múltiplos de esta energía sin sufrir colisiones inelásticas.</p>
+            <p>La gráfica muestra los picos característicos cada ~4.9V, correspondientes a la energía de excitación del mercurio (4.9 eV). Los máximos ocurren cuando los electrones han ganado exactamente múltiplos de esta energía sin sufrir colisiones inelásticas.</p>
         </div>
     </div>
 
@@ -194,11 +202,13 @@
         let recordedPoints = [];
         
         // Configuración del gráfico
-        const margin = { top: 40, right: 40, bottom: 60, left: 60 };
+        const margin = { top: 50, right: 50, bottom: 70, left: 70 };
         const graphWidth = canvas.width - margin.left - margin.right;
         const graphHeight = canvas.height - margin.top - margin.bottom;
+        const maxVoltage = 16; // Cambiado a 16V como solicitado
+        const maxCurrent = 70;
         
-        // Puntos exactos proporcionados por el usuario
+        // Puntos exactos proporcionados por el usuario (ajustados hasta 16V)
         const exactPoints = [
             { V: 0.0, I: 0 },
             { V: 1.0, I: 0 },
@@ -216,6 +226,7 @@
             { V: 14.0, I: 55 },
             { V: 14.7, I: 63 }, // Tercer pico
             { V: 15.2, I: 40 },
+            { V: 16.0, I: 30 }
         ];
         
         // Función para interpolación cúbica de Hermite
@@ -258,8 +269,8 @@
             ctx.lineWidth = 1;
             
             // Líneas verticales (voltaje)
-            for (let v = 0; v <= 20; v += 1) {
-                const x = margin.left + (v / 20) * graphWidth;
+            for (let v = 0; v <= maxVoltage; v += 1) {
+                const x = margin.left + (v / maxVoltage) * graphWidth;
                 ctx.beginPath();
                 ctx.moveTo(x, margin.top);
                 ctx.lineTo(x, margin.top + graphHeight);
@@ -275,19 +286,27 @@
             }
             
             // Líneas horizontales (corriente)
-            for (let i = 0; i <= 70; i += 10) {
-                const y = margin.top + graphHeight - (i / 70) * graphHeight;
+            for (let i = 0; i <= maxCurrent; i += 10) {
+                const y = margin.top + graphHeight - (i / maxCurrent) * graphHeight;
                 ctx.beginPath();
                 ctx.moveTo(margin.left, y);
                 ctx.lineTo(margin.left + graphWidth, y);
                 ctx.stroke();
                 
-                // Etiquetas de corriente
-                ctx.fillStyle = '#555';
-                ctx.textAlign = 'right';
-                ctx.font = '12px Arial';
-                ctx.fillText(i + ' µA', margin.left - 15, y + 5);
+                // Etiquetas de corriente (solo algunas para evitar superposición)
+                if (i % 20 === 0 && i !== 0) {
+                    ctx.fillStyle = '#555';
+                    ctx.textAlign = 'right';
+                    ctx.font = '12px Arial';
+                    ctx.fillText(i + ' µA', margin.left - 15, y + 5);
+                }
             }
+            
+            // Etiqueta de 0 µA
+            ctx.fillStyle = '#555';
+            ctx.textAlign = 'right';
+            ctx.font = '12px Arial';
+            ctx.fillText('0 µA', margin.left - 15, margin.top + graphHeight + 5);
             
             // Dibujar ejes principales
             ctx.strokeStyle = '#000';
@@ -312,7 +331,7 @@
             ctx.fillText('Voltaje (V)', margin.left + graphWidth / 2, margin.top + graphHeight + 40);
             
             ctx.save();
-            ctx.translate(25, margin.top + graphHeight / 2);
+            ctx.translate(margin.left - 40, margin.top + graphHeight / 2);
             ctx.rotate(-Math.PI / 2);
             ctx.fillText('Corriente (µA)', 0, 0);
             ctx.restore();
@@ -332,8 +351,8 @@
             
             // Mover al primer punto
             const firstPoint = recordedPoints[0];
-            const firstX = margin.left + (firstPoint.V / 20) * graphWidth;
-            const firstY = margin.top + graphHeight - (firstPoint.I / 70) * graphHeight;
+            const firstX = margin.left + (firstPoint.V / maxVoltage) * graphWidth;
+            const firstY = margin.top + graphHeight - (firstPoint.I / maxCurrent) * graphHeight;
             ctx.moveTo(firstX, firstY);
             
             // Dibujar segmentos suaves con curvas de Bézier
@@ -341,10 +360,10 @@
                 const prevPoint = recordedPoints[i-1];
                 const point = recordedPoints[i];
                 
-                const x0 = margin.left + (prevPoint.V / 20) * graphWidth;
-                const y0 = margin.top + graphHeight - (prevPoint.I / 70) * graphHeight;
-                const x1 = margin.left + (point.V / 20) * graphWidth;
-                const y1 = margin.top + graphHeight - (point.I / 70) * graphHeight;
+                const x0 = margin.left + (prevPoint.V / maxVoltage) * graphWidth;
+                const y0 = margin.top + graphHeight - (prevPoint.I / maxCurrent) * graphHeight;
+                const x1 = margin.left + (point.V / maxVoltage) * graphWidth;
+                const y1 = margin.top + graphHeight - (point.I / maxCurrent) * graphHeight;
                 
                 // Punto de control (promedio entre los puntos)
                 const cpx = (x0 + x1) / 2;
@@ -363,8 +382,8 @@
             for (const exactPoint of exactPoints) {
                 const recordedPoint = recordedPoints.find(p => Math.abs(p.V - exactPoint.V) < 0.1);
                 if (recordedPoint) {
-                    const x = margin.left + (recordedPoint.V / 20) * graphWidth;
-                    const y = margin.top + graphHeight - (recordedPoint.I / 70) * graphHeight;
+                    const x = margin.left + (recordedPoint.V / maxVoltage) * graphWidth;
+                    const y = margin.top + graphHeight - (recordedPoint.I / maxCurrent) * graphHeight;
                     
                     // Dibujar punto
                     ctx.beginPath();
@@ -372,12 +391,17 @@
                     ctx.fill();
                     ctx.stroke();
                     
-                    // Etiquetar puntos clave
+                    // Etiquetar puntos clave (con posición ajustada para evitar superposición)
                     if ([4.9, 9.8, 14.7].includes(exactPoint.V)) {
                         ctx.fillStyle = '#333';
                         ctx.textAlign = 'center';
                         ctx.font = 'bold 13px Arial';
-                        ctx.fillText(`${exactPoint.V} V`, x, y - 15);
+                        
+                        // Ajustar posición vertical según el pico
+                        let labelY = y - 15;
+                        if (exactPoint.V === 9.8) labelY = y - 25; // Mover más arriba el segundo pico
+                        
+                        ctx.fillText(`${exactPoint.V} V`, x, labelY);
                         ctx.fillStyle = '#ff7a00';
                     }
                 }
@@ -431,7 +455,7 @@
             
             autoInterval = setInterval(() => {
                 currentV += step;
-                if (currentV > 20) {
+                if (currentV > maxVoltage) {
                     stopAutoMode();
                     return;
                 }
