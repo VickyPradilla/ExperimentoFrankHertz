@@ -216,11 +216,6 @@
             { V: 14.0, I: 55 },
             { V: 14.7, I: 63 }, // Tercer pico
             { V: 15.2, I: 40 },
-            { V: 16.0, I: 30 },
-            { V: 17.0, I: 35 },
-            { V: 18.0, I: 40 },
-            { V: 19.0, I: 50 },
-            { V: 20.0, I: 55 }
         ];
         
         // Función para interpolación cúbica de Hermite
@@ -291,7 +286,7 @@
                 ctx.fillStyle = '#555';
                 ctx.textAlign = 'right';
                 ctx.font = '12px Arial';
-                ctx.fillText(i + ' µA', margin.left - 10, y + 5);
+                ctx.fillText(i + ' µA', margin.left - 15, y + 5);
             }
             
             // Dibujar ejes principales
