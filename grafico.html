@@ -1,1 +1,380 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experimento de Franck y Hertz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .graph-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+        
+        canvas {
+            background-color: white;
+            border: 1px solid #ddd;
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .slider {
+            flex-grow: 1;
+        }
+        
+        .mode-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .voltage-display {
+            font-weight: bold;
+            min-width: 60px;
+            text-align: right;
+        }
+        
+        .info {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Experimento de Franck y Hertz</h1>
+        <p>Simulación de la gráfica Corriente (I) vs Voltaje (V)</p>
+        
+        <div class="graph-container">
+            <canvas id="graphCanvas" width="750" height="400"></canvas>
+        </div>
+        
+        <div class="controls">
+            <div class="mode-selector">
+                <button id="autoModeBtn">Barrido Automático</button>
+                <button id="manualModeBtn">Modo Manual</button>
+                <button id="resetBtn">Reiniciar</button>
+            </div>
+            
+            <div class="slider-container">
+                <span>Voltaje (V):</span>
+                <input type="range" id="voltageSlider" class="slider" min="0" max="20" step="0.1" value="0">
+                <span class="voltage-display" id="voltageValue">0.0</span>
+            </div>
+        </div>
+        
+        <div class="info">
+            <p>Instrucciones:</p>
+            <ul>
+                <li><strong>Barrido Automático:</strong> La simulación recorre automáticamente todos los valores de voltaje.</li>
+                <li><strong>Modo Manual:</strong> Mueve el deslizador para cambiar el voltaje manualmente.</li>
+                <li>Los puntos naranja representan las mediciones de corriente para cada voltaje aplicado.</li>
+            </ul>
+        </div>
+    </div>
 
+    <script>
+        // Configuración del canvas y gráfico
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Elementos de la interfaz
+        const voltageSlider = document.getElementById('voltageSlider');
+        const voltageValue = document.getElementById('voltageValue');
+        const autoModeBtn = document.getElementById('autoModeBtn');
+        const manualModeBtn = document.getElementById('manualModeBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        
+        // Variables de estado
+        let currentMode = 'manual'; // 'manual' o 'auto'
+        let isAutoRunning = false;
+        let autoInterval;
+        let recordedPoints = [];
+        
+        // Configuración del gráfico
+        const margin = 40;
+        const graphWidth = canvas.width - 2 * margin;
+        const graphHeight = canvas.height - 2 * margin;
+        
+        // Función para generar datos del experimento Franck-Hertz
+        function generateFranckHertzData(V) {
+            // Esta función simula el comportamiento típico del experimento
+            // con picos aproximadamente cada 4.9V (valor del mercurio)
+            const peaksAt = 4.9;
+            const numPeaks = Math.floor(V / peaksAt);
+            const baseCurrent = 0.5 + 0.3 * Math.random();
+            
+            // Corriente base con ruido
+            let I = baseCurrent + 0.1 * Math.sin(V * 0.8) + 0.05 * (Math.random() - 0.5);
+            
+            // Efecto de los picos
+            for (let i = 1; i <= numPeaks; i++) {
+                const peakCenter = i * peaksAt;
+                const distanceToPeak = Math.abs(V - peakCenter);
+                
+                if (distanceToPeak < 1.5) {
+                    // Añadir un pico
+                    I += 1.5 * Math.exp(-distanceToPeak * distanceToPeak / 0.5);
+                } else if (distanceToPeak < 3) {
+                    // Valle después del pico
+                    I -= 0.3 * Math.exp(-(distanceToPeak - 1.5) * (distanceToPeak - 1.5) / 1.0);
+                }
+            }
+            
+            // Asegurar que la corriente no sea negativa
+            return Math.max(0, I);
+        }
+        
+        // Dibujar ejes y cuadrícula
+        function drawAxes() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Dibujar cuadrícula
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            
+            // Líneas verticales (voltaje)
+            for (let v = 0; v <= 20; v += 2) {
+                const x = margin + (v / 20) * graphWidth;
+                ctx.beginPath();
+                ctx.moveTo(x, margin);
+                ctx.lineTo(x, margin + graphHeight);
+                ctx.stroke();
+                
+                // Etiquetas de voltaje
+                if (v % 4 === 0) {
+                    ctx.fillStyle = '#333';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(v + 'V', x, margin + graphHeight + 20);
+                }
+            }
+            
+            // Líneas horizontales (corriente)
+            for (let i = 0; i <= 5; i += 0.5) {
+                const y = margin + graphHeight - (i / 5) * graphHeight;
+                ctx.beginPath();
+                ctx.moveTo(margin, y);
+                ctx.lineTo(margin + graphWidth, y);
+                ctx.stroke();
+                
+                // Etiquetas de corriente
+                if (i % 1 === 0) {
+                    ctx.fillStyle = '#333';
+                    ctx.textAlign = 'right';
+                    ctx.fillText(i.toFixed(1) + 'µA', margin - 10, y + 5);
+                }
+            }
+            
+            // Dibujar ejes
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            
+            // Eje X (Voltaje)
+            ctx.beginPath();
+            ctx.moveTo(margin, margin + graphHeight);
+            ctx.lineTo(margin + graphWidth, margin + graphHeight);
+            ctx.stroke();
+            
+            // Eje Y (Corriente)
+            ctx.beginPath();
+            ctx.moveTo(margin, margin);
+            ctx.lineTo(margin, margin + graphHeight);
+            ctx.stroke();
+            
+            // Etiquetas de los ejes
+            ctx.fillStyle = '#000';
+            ctx.textAlign = 'center';
+            ctx.fillText('Voltaje (V)', canvas.width / 2, canvas.height - 5);
+            
+            ctx.save();
+            ctx.translate(20, canvas.height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Corriente (µA)', 0, 0);
+            ctx.restore();
+        }
+        
+        // Dibujar puntos y línea de la gráfica
+        function drawGraph() {
+            if (recordedPoints.length === 0) return;
+            
+            // Ordenar puntos por voltaje (por si acaso)
+            recordedPoints.sort((a, b) => a.V - b.V);
+            
+            // Dibujar línea
+            ctx.strokeStyle = '#003366'; // Azul oscuro
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            const firstPoint = recordedPoints[0];
+            const x = margin + (firstPoint.V / 20) * graphWidth;
+            const y = margin + graphHeight - (firstPoint.I / 5) * graphHeight;
+            ctx.moveTo(x, y);
+            
+            for (let i = 1; i < recordedPoints.length; i++) {
+                const point = recordedPoints[i];
+                const x = margin + (point.V / 20) * graphWidth;
+                const y = margin + graphHeight - (point.I / 5) * graphHeight;
+                ctx.lineTo(x, y);
+            }
+            
+            ctx.stroke();
+            
+            // Dibujar puntos
+            ctx.fillStyle = '#FF8C00'; // Naranja
+            for (const point of recordedPoints) {
+                const x = margin + (point.V / 20) * graphWidth;
+                const y = margin + graphHeight - (point.I / 5) * graphHeight;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        // Actualizar gráfico con nuevo punto
+        function updateGraph(V) {
+            // Verificar si este voltaje ya fue registrado
+            const exists = recordedPoints.some(point => Math.abs(point.V - V) < 0.1);
+            if (exists) return;
+            
+            // Generar dato de corriente para este voltaje
+            const I = generateFranckHertzData(V);
+            
+            // Añadir a los puntos registrados
+            recordedPoints.push({ V, I });
+            
+            // Redibujar todo
+            drawAxes();
+            drawGraph();
+        }
+        
+        // Modo automático
+        function startAutoMode() {
+            if (isAutoRunning) return;
+            
+            currentMode = 'auto';
+            isAutoRunning = true;
+            autoModeBtn.disabled = true;
+            manualModeBtn.disabled = false;
+            voltageSlider.disabled = true;
+            
+            let currentV = 0;
+            const step = 0.1;
+            const delay = 100; // ms entre pasos
+            
+            autoInterval = setInterval(() => {
+                currentV += step;
+                if (currentV > 20) {
+                    stopAutoMode();
+                    return;
+                }
+                
+                voltageSlider.value = currentV;
+                voltageValue.textContent = currentV.toFixed(1);
+                updateGraph(currentV);
+            }, delay);
+        }
+        
+        function stopAutoMode() {
+            clearInterval(autoInterval);
+            isAutoRunning = false;
+            autoModeBtn.disabled = false;
+            manualModeBtn.disabled = false;
+            voltageSlider.disabled = false;
+        }
+        
+        // Modo manual
+        function setManualMode() {
+            if (currentMode === 'manual') return;
+            
+            stopAutoMode();
+            currentMode = 'manual';
+            manualModeBtn.disabled = true;
+            autoModeBtn.disabled = false;
+            voltageSlider.disabled = false;
+        }
+        
+        // Reiniciar simulación
+        function resetSimulation() {
+            stopAutoMode();
+            recordedPoints = [];
+            voltageSlider.value = 0;
+            voltageValue.textContent = '0.0';
+            drawAxes();
+        }
+        
+        // Event listeners
+        voltageSlider.addEventListener('input', () => {
+            const V = parseFloat(voltageSlider.value);
+            voltageValue.textContent = V.toFixed(1);
+            
+            if (currentMode === 'manual') {
+                updateGraph(V);
+            }
+        });
+        
+        autoModeBtn.addEventListener('click', startAutoMode);
+        manualModeBtn.addEventListener('click', setManualMode);
+        resetBtn.addEventListener('click', resetSimulation);
+        
+        // Inicialización
+        function init() {
+            drawAxes();
+            manualModeBtn.disabled = true; // Comenzar en modo manual
+        }
+        
+        init();
+    </script>
+</body>
+</html>
