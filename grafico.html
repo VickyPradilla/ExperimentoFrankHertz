@@ -39,55 +39,71 @@
         
         .controls {
             display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .slider-container {
-            display: flex;
-            align-items: center;
+            flex-wrap: wrap;
             gap: 10px;
-        }
-        
-        .slider {
-            flex-grow: 1;
-        }
-        
-        .mode-selector {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
         
         button {
             padding: 8px 15px;
-            background-color: #4CAF50;
-            color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-size: 14px;
+            transition: background-color 0.3s;
         }
         
-        button:hover {
-            background-color: #45a049;
+        #startBtn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        #stopBtn {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        #resetBtn {
+            background-color: #ff9800;
+            color: white;
+        }
+        
+        .auto-sweep-btn {
+            background-color: #2196F3;
+            color: white;
+        }
+        
+        .quiz-btn {
+            background-color: #9c27b0;
+            color: white;
         }
         
         button:disabled {
-            background-color: #cccccc;
+            background-color: #cccccc !important;
             cursor: not-allowed;
+        }
+        
+        .slider-section {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .slider-label {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .voltage-slider {
+            width: 100%;
+            margin-bottom: 5px;
         }
         
         .voltage-display {
             font-weight: bold;
-            min-width: 60px;
-            text-align: right;
-        }
-        
-        .info {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #666;
+            text-align: center;
+            font-size: 16px;
         }
         
         .peaks-info {
@@ -95,6 +111,12 @@
             padding: 10px;
             border-radius: 5px;
             margin-top: 15px;
+        }
+        
+        .info {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
         }
     </style>
 </head>
@@ -108,17 +130,17 @@
         </div>
         
         <div class="controls">
-            <div class="mode-selector">
-                <button id="autoModeBtn">Barrido Automático</button>
-                <button id="manualModeBtn">Modo Manual</button>
-                <button id="resetBtn">Reiniciar</button>
-            </div>
-            
-            <div class="slider-container">
-                <span>Voltaje (V):</span>
-                <input type="range" id="voltageSlider" class="slider" min="0" max="20" step="0.1" value="0">
-                <span class="voltage-display" id="voltageValue">0.0</span>
-            </div>
+            <button onclick="startSimulation()" id="startBtn">Iniciar</button>
+            <button onclick="stopSimulation()" id="stopBtn" disabled>Detener</button>
+            <button onclick="resetSimulation()" id="resetBtn">Reiniciar</button>
+            <button onclick="toggleAutoSweep()" id="autoSweepBtn" class="auto-sweep-btn">Barrido Automático</button>
+            <button onclick="window.location.href='quiz.html'" class="quiz-btn">Tomar Quiz</button>
+        </div>
+        
+        <div class="slider-section">
+            <div class="slider-label">Control Manual de Voltaje</div>
+            <input type="range" class="voltage-slider" id="voltageRange" min="0" max="20" value="0" step="0.1" oninput="handleSliderChange(this.value)">
+            <div class="voltage-display" id="voltageDisplay">0,0 V</div>
         </div>
         
         <div class="peaks-info">
@@ -146,24 +168,26 @@
         const ctx = canvas.getContext('2d');
         
         // Elementos de la interfaz
-        const voltageSlider = document.getElementById('voltageSlider');
-        const voltageValue = document.getElementById('voltageValue');
-        const autoModeBtn = document.getElementById('autoModeBtn');
-        const manualModeBtn = document.getElementById('manualModeBtn');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
         const resetBtn = document.getElementById('resetBtn');
+        const autoSweepBtn = document.getElementById('autoSweepBtn');
+        const voltageRange = document.getElementById('voltageRange');
+        const voltageDisplay = document.getElementById('voltageDisplay');
         
         // Variables de estado
-        let currentMode = 'manual'; // 'manual' o 'auto'
-        let isAutoRunning = false;
-        let autoInterval;
+        let isRunning = false;
+        let isAutoSweep = false;
+        let simulationInterval;
         let recordedPoints = [];
+        let currentVoltage = 0;
         
         // Configuración del gráfico
         const margin = 50;
         const graphWidth = canvas.width - 2 * margin;
         const graphHeight = canvas.height - 2 * margin;
         
-        // Puntos clave del experimento (basados en tus datos)
+        // Puntos clave del experimento (basados en datos reales)
         const keyPoints = [
             { V: 0.0, I: 0.0 },
             { V: 3.0, I: 0.4 },
@@ -365,80 +389,95 @@
             drawGraph();
         }
         
-        // Modo automático
-        function startAutoMode() {
-            if (isAutoRunning) return;
+        // Función para iniciar la simulación
+        function startSimulation() {
+            if (isRunning) return;
             
-            currentMode = 'auto';
-            isAutoRunning = true;
-            autoModeBtn.disabled = true;
-            manualModeBtn.disabled = false;
-            voltageSlider.disabled = true;
+            isRunning = true;
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            voltageRange.disabled = isAutoSweep;
             
-            let currentV = 0;
-            const step = 0.1;
-            const delay = 100; // ms entre pasos
-            
-            autoInterval = setInterval(() => {
-                currentV += step;
-                if (currentV > 20) {
-                    stopAutoMode();
-                    return;
-                }
-                
-                voltageSlider.value = currentV;
-                voltageValue.textContent = currentV.toFixed(1);
-                updateGraph(currentV);
-            }, delay);
+            if (isAutoSweep) {
+                // Modo barrido automático
+                simulationInterval = setInterval(() => {
+                    currentVoltage += 0.1;
+                    if (currentVoltage > 20) {
+                        stopSimulation();
+                        return;
+                    }
+                    
+                    voltageRange.value = currentVoltage;
+                    voltageDisplay.textContent = currentVoltage.toFixed(1).replace('.', ',') + ' V';
+                    updateGraph(currentVoltage);
+                }, 100);
+            } else {
+                // Modo manual - solo habilitar controles
+                voltageRange.disabled = false;
+            }
         }
         
-        function stopAutoMode() {
-            clearInterval(autoInterval);
-            isAutoRunning = false;
-            autoModeBtn.disabled = false;
-            manualModeBtn.disabled = false;
-            voltageSlider.disabled = false;
-        }
-        
-        // Modo manual
-        function setManualMode() {
-            if (currentMode === 'manual') return;
+        // Función para detener la simulación
+        function stopSimulation() {
+            if (!isRunning) return;
             
-            stopAutoMode();
-            currentMode = 'manual';
-            manualModeBtn.disabled = true;
-            autoModeBtn.disabled = false;
-            voltageSlider.disabled = false;
+            isRunning = false;
+            clearInterval(simulationInterval);
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            voltageRange.disabled = false;
         }
         
-        // Reiniciar simulación
+        // Función para reiniciar la simulación
         function resetSimulation() {
-            stopAutoMode();
+            stopSimulation();
             recordedPoints = [];
-            voltageSlider.value = 0;
-            voltageValue.textContent = '0.0';
+            currentVoltage = 0;
+            voltageRange.value = 0;
+            voltageDisplay.textContent = '0,0 V';
             drawAxes();
         }
         
-        // Event listeners
-        voltageSlider.addEventListener('input', () => {
-            const V = parseFloat(voltageSlider.value);
-            voltageValue.textContent = V.toFixed(1);
+        // Función para alternar el barrido automático
+        function toggleAutoSweep() {
+            isAutoSweep = !isAutoSweep;
+            autoSweepBtn.textContent = isAutoSweep ? 'Modo Manual' : 'Barrido Automático';
+            autoSweepBtn.style.backgroundColor = isAutoSweep ? '#ff9800' : '#2196F3';
             
-            if (currentMode === 'manual') {
-                updateGraph(V);
+            if (isRunning) {
+                stopSimulation();
+                startSimulation();
             }
-        });
+        }
         
-        autoModeBtn.addEventListener('click', startAutoMode);
-        manualModeBtn.addEventListener('click', setManualMode);
-        resetBtn.addEventListener('click', resetSimulation);
+        // Manejar cambios en el slider manual
+        function handleSliderChange(value) {
+            currentVoltage = parseFloat(value);
+            voltageDisplay.textContent = currentVoltage.toFixed(1).replace('.', ',') + ' V';
+            
+            if (isRunning && !isAutoSweep) {
+                updateGraph(currentVoltage);
+            }
+        }
         
         // Inicialización
         function init() {
             drawAxes();
-            manualModeBtn.disabled = true; // Comenzar en modo manual
+            // Configurar el slider para usar coma decimal
+            voltageDisplay.textContent = '0,0 V';
         }
+        
+        // Event listeners para teclado (opcional)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ') {
+                if (isRunning) stopSimulation();
+                else startSimulation();
+            } else if (e.key === 'r') {
+                resetSimulation();
+            } else if (e.key === 'a') {
+                toggleAutoSweep();
+            }
+        });
         
         init();
     </script>
