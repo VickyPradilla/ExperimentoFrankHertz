@@ -401,8 +401,6 @@
     </div>
 
     <div class="controls">
-        <button id="startBtn">Iniciar</button>
-        <button id="stopBtn" disabled>Detener</button>
         <button id="resetBtn">Reiniciar</button>
         <button id="autoSweepBtn" class="auto-sweep-btn">Barrido Automático</button>
         <button onclick="window.location.href='quiz.html'" class="quiz-btn">Tomar Quiz</button>
@@ -442,8 +440,6 @@
             excitationLevel: document.getElementById('excitationLevel'),
             currentInfo: document.getElementById('currentInfo'),
             noCurrentWarning: document.getElementById('noCurrentWarning'),
-            startBtn: document.getElementById('startBtn'),
-            stopBtn: document.getElementById('stopBtn'),
             resetBtn: document.getElementById('resetBtn'),
             autoSweepBtn: document.getElementById('autoSweepBtn')
         };
@@ -809,16 +805,12 @@
 
         function startSimulation() {
             state.isRunning = true;
-            DOM.startBtn.disabled = true;
-            DOM.stopBtn.disabled = false;
             animateElectrons();
             createElectronsPeriodically();
         }
 
         function stopSimulation() {
             state.isRunning = false;
-            DOM.startBtn.disabled = false;
-            DOM.stopBtn.disabled = true;
             cancelAnimationFrame(state.animationFrameId);
         }
 
@@ -854,8 +846,6 @@
             DOM.autoSweepBtn.classList.add('active');
             
             DOM.voltageRange.disabled = true;
-            DOM.startBtn.disabled = true;
-            DOM.resetBtn.disabled = true;
             
             startSimulation();
             
@@ -890,8 +880,6 @@
             DOM.autoSweepBtn.classList.remove('active');
             
             DOM.voltageRange.disabled = false;
-            DOM.startBtn.disabled = false;
-            DOM.resetBtn.disabled = false;
         }
 
         function toggleAutoSweep() {
@@ -904,8 +892,6 @@
             
             // Event listeners
             DOM.voltageRange.addEventListener('input', (e) => handleSliderChange(e.target.value));
-            DOM.startBtn.addEventListener('click', startSimulation);
-            DOM.stopBtn.addEventListener('click', stopSimulation);
             DOM.resetBtn.addEventListener('click', resetSimulation);
             DOM.autoSweepBtn.addEventListener('click', toggleAutoSweep);
             
