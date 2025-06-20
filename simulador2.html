@@ -1,0 +1,41 @@
+function calculateFranckHertzCurrent() {
+    if (voltage <= STOPPING_POTENTIAL) {
+        currentMeasurement = 0;
+        updateCurrentDisplay();
+        return;
+    }
+
+    const effectiveVoltage = voltage - STOPPING_POTENTIAL;
+    let current = effectiveVoltage * 25; // Base linear increase
+
+    // Ajustamos para crear picos en 4.9V, 9.8V y 14.7V efectivos
+    const excitationEnergy = 4.9;
+    
+    // Calculamos cuántas excitaciones completas caben en el voltaje actual
+    const n = Math.floor(effectiveVoltage / excitationEnergy);
+    
+    // Factor de caída después de cada nivel de excitación
+    if (n > 0) {
+        // Puntos donde debe haber valles (justo después de cada nivel de excitación)
+        const distanceFromPeak = Math.abs(effectiveVoltage % excitationEnergy - excitationEnergy/2);
+        
+        // Crear picos más pronunciados
+        if (distanceFromPeak < 1.5) {
+            current *= 1.5 - distanceFromPeak/1.5;
+        }
+        
+        // Caída más pronunciada después del pico
+        if (effectiveVoltage % excitationEnergy > 2.5 && effectiveVoltage % excitationEnergy < 4.5) {
+            current *= 0.3;
+        }
+    }
+
+    // Asegurar que la corriente no sea negativa
+    current = Math.max(0, current);
+    
+    // Variación aleatoria pequeña para hacerlo más realista
+    current += (Math.random() - 0.5) * 5;
+    
+    currentMeasurement = current;
+    updateCurrentDisplay();
+}
