@@ -255,8 +255,8 @@
             position: absolute;
             top: 20px;
             right: 20px;
-            background-color: rgba(255, 255, 255, 0.2);
-            color: white;
+            background-color: rgba(30, 64, 175, 0.3);
+            color: black;
             border: none;
             padding: 12px 24px;
             border-radius: 50px;
@@ -310,10 +310,11 @@
             background: white;
             border-radius: 20px;
             padding: 20px;
-            
             width: 600px;
             height: 450px;
             box-sizing: border-box;
+            margin-left: 40px;
+
         }
 
         .graph-title {
@@ -338,6 +339,39 @@
 
         .excitation-indicator.active {
             opacity: 1;
+        }
+        
+        .gas-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+        
+        .gas-btn {
+            min-width: 120px;
+            padding: 10px 15px;
+            font-size: 14px;
+        }
+        
+        .mercury-btn {
+            background-color: #4CAF50;
+        }
+        
+        .mercury-btn.active {
+            background-color: #2E7D32;
+        }
+        
+        .neon-btn {
+            background-color: #2196F3;
+        }
+        
+        .neon-btn.active {
+            background-color: #1565C0;
+        }
+        
+        .gas-btn:disabled {
+            background-color: #9E9E9E;
         }
 
         @media (max-width: 1200px) {
@@ -379,6 +413,11 @@
 
                 <div class="control-panel">
                     <div class="panel-title">POTENCIAL ACELERADOR</div>
+                    
+                    <div class="gas-selector">
+                        <button id="mercuryBtn" class="gas-btn mercury-btn active">Mercurio</button>
+                        <button id="neonBtn" class="gas-btn neon-btn">Neón</button>
+                    </div>
 
                     <div class="slider-section">
                         <div class="slider-label">Control Manual de Voltaje</div>
@@ -386,7 +425,7 @@
                         <div class="voltage-display" id="voltageDisplay">0,0 V</div>
                     </div>
 
-                    <div class="stopping-potential-info">
+                    <div id="stoppingPotentialInfo" class="stopping-potential-info">
                         Potencial de frenado: 1,5 V
                     </div>
 
@@ -413,8 +452,6 @@
     </div>
 
     <div class="controls">
-        <button onclick="startSimulation()" id="startBtn">Iniciar</button>
-        <button onclick="stopSimulation()" id="stopBtn" disabled>Detener</button>
         <button onclick="resetSimulation()" id="resetBtn">Reiniciar</button>
         <button onclick="toggleAutoSweep()" id="autoSweepBtn" class="auto-sweep-btn">Barrido Automático</button>
         <button onclick="window.location.href='quiz.html'" class="quiz-btn">Tomar Quiz</button>
@@ -433,16 +470,33 @@
         let autoSweepActive = false;
         let autoSweepInterval = null;
         let franckHertzGraph;
+        let currentGas = 'mercury'; // 'mercury' or 'neon'
 
         // Constantes del experimento
-        const MERCURY_EXCITATION_ENERGY = 4.9; // eV
-        const STOPPING_POTENTIAL = 1.5; // V
+        const GAS_PROPERTIES = {
+            mercury: {
+                excitationEnergy: 4.9, // eV
+                stoppingPotential: 1.5, // V
+                maxVoltage: 16,
+                maxCurrent: 320,
+                color: '#4CAF50',
+                keyVoltages: [0, 4.9, 9.8, 14.7, 16]
+            },
+            neon: {
+                excitationEnergy: 18.7, // eV
+                stoppingPotential: 1.5, // V
+                maxVoltage: 60,
+                maxCurrent: 500,
+                color: '#2196F3',
+                keyVoltages: [0, 18.7, 37.4, 56.1, 60]
+            }
+        };
 
         // =============================================
         // Funciones de la simulación principal
         // =============================================
         function createElectron() {
-            if (voltage <= STOPPING_POTENTIAL) return;
+            if (voltage <= getCurrentGasProperty('stoppingPotential')) return;
             
             const tube = document.getElementById('tube');
             const electron = document.createElement('div');
@@ -457,7 +511,7 @@
             
             tube.appendChild(electron);
             
-            const effectiveVoltage = voltage - STOPPING_POTENTIAL;
+            const effectiveVoltage = voltage - getCurrentGasProperty('stoppingPotential');
             const kineticEnergy = effectiveVoltage;
             const baseSpeed = Math.sqrt(Math.max(kineticEnergy, 0.1)) * 1.2;
             
@@ -489,26 +543,14 @@
 
         function startSimulation() {
             isRunning = true;
-            document.getElementById('startBtn').disabled = true;
-            document.getElementById('stopBtn').disabled = false;
             animateElectrons();
             createElectronsPeriodically();
-        }
-
-        function stopSimulation() {
-            isRunning = false;
-            document.getElementById('startBtn').disabled = false;
-            document.getElementById('stopBtn').disabled = true;
         }
 
         function resetSimulation() {
             if (autoSweepActive) {
                 stopAutoSweep();
             }
-            
-            isRunning = false;
-            document.getElementById('startBtn').disabled = false;
-            document.getElementById('stopBtn').disabled = true;
             
             const tube = document.getElementById('tube');
             
@@ -528,6 +570,9 @@
             
             updateDisplay();
             franckHertzGraph.resetSimulation();
+            
+            // Actualizar el rango del slider según el gas actual
+            updateVoltageRange();
         }
 
         function toggleAutoSweep() {
@@ -546,14 +591,12 @@
             document.getElementById('autoSweepBtn').classList.add('active');
             
             document.getElementById('voltageRange').disabled = true;
-            document.getElementById('startBtn').disabled = true;
-            document.getElementById('resetBtn').disabled = true;
             
             startSimulation();
             
             let sweepVoltage = 0;
             autoSweepInterval = setInterval(() => {
-                if (!autoSweepActive || sweepVoltage > 16) {
+                if (!autoSweepActive || sweepVoltage > getCurrentGasProperty('maxVoltage')) {
                     stopAutoSweep();
                     return;
                 }
@@ -582,8 +625,6 @@
             document.getElementById('autoSweepBtn').classList.remove('active');
             
             document.getElementById('voltageRange').disabled = false;
-            document.getElementById('startBtn').disabled = false;
-            document.getElementById('resetBtn').disabled = false;
         }
 
         function handleSliderChange(value) {
@@ -610,10 +651,10 @@
         function updateDisplay() {
             document.getElementById('voltageDisplay').textContent = voltage.toFixed(1).replace('.', ',') + ' V';
             
-            if (voltage > STOPPING_POTENTIAL) {
-                document.getElementById('energyDisplay').textContent = `Energía: ${(voltage - STOPPING_POTENTIAL).toFixed(1).replace('.', ',')} eV`;
+            if (voltage > getCurrentGasProperty('stoppingPotential')) {
+                document.getElementById('energyDisplay').textContent = `Energía: ${(voltage - getCurrentGasProperty('stoppingPotential')).toFixed(1).replace('.', ',')} eV`;
                 
-                const excitationLevel = Math.floor((voltage - STOPPING_POTENTIAL) / MERCURY_EXCITATION_ENERGY);
+                const excitationLevel = Math.floor((voltage - getCurrentGasProperty('stoppingPotential')) / getCurrentGasProperty('excitationEnergy'));
                 document.getElementById('excitationLevel').textContent = `Nivel: ${excitationLevel}`;
                 
                 document.getElementById('currentInfo').style.display = 'block';
@@ -622,26 +663,30 @@
                 document.getElementById('currentInfo').style.display = 'none';
                 document.getElementById('noCurrentWarning').style.display = 'block';
             }
+            
+            // Actualizar la información del potencial de frenado
+            document.getElementById('stoppingPotentialInfo').textContent = 
+                `Potencial de frenado: ${getCurrentGasProperty('stoppingPotential').toFixed(1).replace('.', ',')} V`;
         }
 
         function calculateFranckHertzCurrent() {
-            if (voltage <= STOPPING_POTENTIAL) {
+            if (voltage <= getCurrentGasProperty('stoppingPotential')) {
                 currentMeasurement = 0;
                 updateCurrentDisplay();
                 return;
             }
 
-            const effectiveVoltage = voltage - STOPPING_POTENTIAL;
-            let current = effectiveVoltage * 25;
+            const effectiveVoltage = voltage - getCurrentGasProperty('stoppingPotential');
+            let current = effectiveVoltage * (currentGas === 'mercury' ? 25 : 15);
 
-            const excitationEnergy = 4.9;
+            const excitationEnergy = getCurrentGasProperty('excitationEnergy');
             
-            for (let n = 1; n <= 4; n++) {
+            for (let n = 1; n <= 3; n++) {
                 const excitationVoltage = n * excitationEnergy;
                 const distance = effectiveVoltage - excitationVoltage;
                 
                 if (effectiveVoltage > excitationVoltage - 1 && effectiveVoltage < excitationVoltage + 1) {
-                    const dropFactor = Math.exp(-Math.pow(distance * 3, 2));
+                    const dropFactor = Math.exp(-Math.pow(distance * (currentGas === 'mercury' ? 3 : 2), 2));
                     current *= (0.2 + 0.8 * (1 - dropFactor));
                 }
             }
@@ -650,14 +695,14 @@
             const sawtoothFactor = 0.3 + 0.7 * fractionalPart;
             current *= sawtoothFactor;
 
-            current += (Math.random() - 0.5) * 5;
+            current += (Math.random() - 0.5) * (currentGas === 'mercury' ? 5 : 8);
             currentMeasurement = Math.max(0, current);
             updateCurrentDisplay();
         }
 
         function updateCurrentDisplay() {
-            if (voltage > STOPPING_POTENTIAL) {
-                document.getElementById('currentDisplay').textContent = `Corriente: ${Math.round(currentMeasurement)} mA`;
+            if (voltage > getCurrentGasProperty('stoppingPotential')) {
+                document.getElementById('currentDisplay').textContent = `Corriente: ${Math.round(currentMeasurement)} ${currentGas === 'mercury' ? 'µA' : 'mA'}`;
             }
         }
 
@@ -666,7 +711,8 @@
             
             createElectron();
             
-            const interval = voltage > STOPPING_POTENTIAL ? Math.max(150, 400 - voltage * 15) : 1000;
+            const interval = voltage > getCurrentGasProperty('stoppingPotential') ? 
+                Math.max(150, 400 - voltage * (currentGas === 'mercury' ? 15 : 8)) : 1000;
             setTimeout(createElectronsPeriodically, interval);
         }
 
@@ -674,7 +720,7 @@
             if (!isRunning) return;
 
             electrons.forEach((electron, index) => {
-                if (voltage > STOPPING_POTENTIAL) {
+                if (voltage > getCurrentGasProperty('stoppingPotential')) {
                     electron.x += electron.vx;
                     electron.y += electron.vy;
                     
@@ -687,10 +733,10 @@
                         electron.vy = -Math.abs(electron.vy);
                     }
                     
-                    if (!electron.hasExcited && electron.energy >= MERCURY_EXCITATION_ENERGY) {
+                    if (!electron.hasExcited && electron.energy >= getCurrentGasProperty('excitationEnergy')) {
                         if (Math.random() < 0.015) {
                             electron.hasExcited = true;
-                            electron.energy -= MERCURY_EXCITATION_ENERGY;
+                            electron.energy -= getCurrentGasProperty('excitationEnergy');
                             electron.vx *= 0.3;
                             
                             createExcitedAtom(electron.x, electron.y);
@@ -714,6 +760,41 @@
         }
 
         // =============================================
+        // Funciones para manejar el cambio de gas
+        // =============================================
+        function switchGas(newGas) {
+            if (isRunning || autoSweepActive) {
+                return; // No permitir cambiar de gas si la simulación está en curso
+            }
+            
+            currentGas = newGas;
+            resetSimulation();
+            
+            // Actualizar estado de los botones
+            document.getElementById('mercuryBtn').classList.toggle('active', currentGas === 'mercury');
+            document.getElementById('neonBtn').classList.toggle('active', currentGas === 'neon');
+            
+            // Actualizar el rango del slider
+            updateVoltageRange();
+            
+            // Actualizar el gráfico
+            franckHertzGraph.updateGasProperties();
+        }
+
+        function getCurrentGasProperty(property) {
+            return GAS_PROPERTIES[currentGas][property];
+        }
+
+        function updateVoltageRange() {
+            const slider = document.getElementById('voltageRange');
+            slider.max = getCurrentGasProperty('maxVoltage');
+            slider.value = 0;
+            voltage = 0;
+            maxVoltageReached = 0;
+            updateDisplay();
+        }
+
+        // =============================================
         // Implementación del gráfico Franck-Hertz
         // =============================================
         const FranckHertzGraph = {
@@ -721,13 +802,23 @@
                 this.canvas = document.getElementById(canvasId);
                 this.ctx = this.canvas.getContext('2d');
                 this.recordedPoints = [];
-                this.maxVoltage = 16;
-                this.maxCurrent = 320;
+                this.currentGas = 'mercury';
+                this.updateGasProperties();
                 
                 // Ajustar tamaño del canvas para aprovechar el nuevo espacio
                 this.adjustCanvasSize();
                 window.addEventListener('resize', () => this.adjustCanvasSize());
                 
+                this.drawAxes();
+            },
+            
+            updateGasProperties: function() {
+                this.currentGas = currentGas;
+                this.maxVoltage = getCurrentGasProperty('maxVoltage');
+                this.maxCurrent = getCurrentGasProperty('maxCurrent');
+                this.keyVoltages = getCurrentGasProperty('keyVoltages');
+                this.graphColor = getCurrentGasProperty('color');
+                this.recordedPoints = [];
                 this.drawAxes();
             },
             
@@ -774,7 +865,8 @@
                 this.ctx.lineWidth = 1;
                 
                 // Líneas verticales (voltaje)
-                for (let v = 0; v <= this.maxVoltage; v += 1) {
+                const voltageStep = this.currentGas === 'mercury' ? 1 : 5;
+                for (let v = 0; v <= this.maxVoltage; v += voltageStep) {
                     const x = margin.left + (v / this.maxVoltage) * graphWidth;
                     this.ctx.beginPath();
                     this.ctx.moveTo(x, margin.top);
@@ -782,7 +874,7 @@
                     this.ctx.stroke();
                     
                     // Etiquetas de voltaje
-                    if (v % 2 === 0) {
+                    if (v % (this.currentGas === 'mercury' ? 2 : 10) === 0) {
                         this.ctx.fillStyle = '#555';
                         this.ctx.textAlign = 'center';
                         this.ctx.font = '12px Arial';
@@ -791,7 +883,10 @@
                 }
                 
                 // Líneas horizontales (corriente)
-                const currentSteps = [0, 40, 80, 120, 160, 200, 240, 280, 320];
+                const currentSteps = this.currentGas === 'mercury' ? 
+                    [0, 40, 80, 120, 160, 200, 240, 280, 320] :
+                    [0, 100, 200, 300, 400, 500];
+                
                 for (let i of currentSteps) {
                     const y = margin.top + graphHeight - (i / this.maxCurrent) * graphHeight;
                     this.ctx.beginPath();
@@ -803,7 +898,7 @@
                     this.ctx.fillStyle = '#555';
                     this.ctx.textAlign = 'right';
                     this.ctx.font = '12px Arial';
-                    this.ctx.fillText(i + ' µA', margin.left - 10, y + 5);
+                    this.ctx.fillText(i + (this.currentGas === 'mercury' ? ' µA' : ' mA'), margin.left - 10, y + 5);
                 }
                 
                 // Dibujar ejes principales
@@ -829,13 +924,13 @@
                 this.ctx.fillText('Voltaje (V)', margin.left + graphWidth / 2, margin.top + graphHeight + 40);
                 
                 this.ctx.save();
-                this.ctx.translate(margin.left - 50, margin.top + graphHeight / 2);
+                this.ctx.translate(margin.left -52, margin.top + graphHeight / 2);
                 this.ctx.rotate(-Math.PI / 2);
-                this.ctx.fillText('Corriente (µA)', 0, 0);
+                this.ctx.fillText(`Corriente (${this.currentGas === 'mercury' ? 'µA' : 'mA'})`, 0, 0);
                 this.ctx.restore();
                 
                 // Marcar potencial de frenado
-                const stoppingX = margin.left + (STOPPING_POTENTIAL / this.maxVoltage) * graphWidth;
+                const stoppingX = margin.left + (getCurrentGasProperty('stoppingPotential') / this.maxVoltage) * graphWidth;
                 this.ctx.strokeStyle = '#ff6b35';
                 this.ctx.setLineDash([5, 3]);
                 this.ctx.beginPath();
@@ -846,7 +941,7 @@
                 
                 this.ctx.fillStyle = '#ff6b35';
                 this.ctx.font = 'bold 12px Arial';
-                this.ctx.fillText('1.5 V', stoppingX - 15, margin.top + graphHeight + 40);
+                this.ctx.fillText(`${getCurrentGasProperty('stoppingPotential').toFixed(1)} V`, stoppingX - 15, margin.top + graphHeight + 40);
             },
             
             drawSmoothGraph: function() {
@@ -859,7 +954,7 @@
                 this.recordedPoints.sort((a, b) => a.V - b.V);
                 
                 // Dibujar línea suave
-                this.ctx.strokeStyle = '#2c7be5';
+                this.ctx.strokeStyle = this.graphColor;
                 this.ctx.lineWidth = 3;
                 this.ctx.beginPath();
                 
@@ -890,9 +985,8 @@
                 this.ctx.strokeStyle = '#fff';
                 this.ctx.lineWidth = 2;
                 
-                const keyVoltages = [0, 4.9, 9.8, 14.7, 16];
                 for (const point of this.recordedPoints) {
-                    if (keyVoltages.some(v => Math.abs(v - point.V) < 0.1)) {
+                    if (this.keyVoltages.some(v => Math.abs(v - point.V) < 0.1)) {
                         const x = margin.left + (point.V / this.maxVoltage) * graphWidth;
                         const y = margin.top + graphHeight - (point.I / this.maxCurrent) * graphHeight;
                         
@@ -902,15 +996,15 @@
                         this.ctx.stroke();
                         
                         // Etiquetar puntos clave
-                        if (point.V === 4.9 || point.V === 9.8 || point.V === 14.7) {
+                        if (point.V > 0 && point.V < this.maxVoltage) {
                             this.ctx.fillStyle = '#333';
                             this.ctx.textAlign = 'center';
                             this.ctx.font = 'bold 12px Arial';
                             
                             let labelY = y - 15;
-                            if (point.V === 9.8) labelY = y - 25;
+                            if (point.V === this.keyVoltages[2]) labelY = y - 25;
                             
-                            this.ctx.fillText(`${point.V} V`, x, labelY);
+                            this.ctx.fillText(`${point.V.toFixed(1)} V`, x, labelY);
                             this.ctx.fillStyle = '#ff7a00';
                         }
                     }
@@ -925,12 +1019,33 @@
             franckHertzGraph = Object.create(FranckHertzGraph);
             franckHertzGraph.init('franckHertzGraph');
             
+            // Configurar botones de gas
+            document.getElementById('mercuryBtn').addEventListener('click', function() {
+                if (!isRunning && !autoSweepActive) {
+                    switchGas('mercury');
+                }
+            });
+            
+            document.getElementById('neonBtn').addEventListener('click', function() {
+                if (!isRunning && !autoSweepActive) {
+                    switchGas('neon');
+                }
+            });
+            
+            // Actualizar estado de los botones de gas
+            function updateGasButtonsState() {
+                const canChangeGas = !isRunning && !autoSweepActive;
+                document.getElementById('mercuryBtn').disabled = !canChangeGas;
+                document.getElementById('neonBtn').disabled = !canChangeGas;
+            }
+            
+            // Observar cambios en el estado de la simulación
+            setInterval(updateGasButtonsState, 100);
+            
             updateDisplay();
         };
     </script>
 
-      
   
-
 </body>
 </html>
