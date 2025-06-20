@@ -189,7 +189,6 @@
             padding: 15px;
             border-radius: 15px;
             margin-top: 15px;
-            /* Añade estas propiedades */
             min-width: 200px;
             text-align: center;
         }
@@ -199,7 +198,6 @@
             font-weight: bold;
             color: #2c5aa0;
             margin: 5px 0;
-            /* Añade esta propiedad para manejar texto largo */
             word-break: keep-all;
         }
 
@@ -275,13 +273,12 @@
             transform: translateY(-2px);
         }
 
-
         button:hover {
             background: #2c5aa0f;
         }
 
         button:disabled {
-            background: #2c5aa0;
+            background: #9E9E9E;
             cursor: not-allowed;
         }
 
@@ -314,7 +311,6 @@
             height: 450px;
             box-sizing: border-box;
             margin-left: 40px;
-
         }
 
         .graph-title {
@@ -480,7 +476,10 @@
                 maxVoltage: 16,
                 maxCurrent: 320,
                 color: '#4CAF50',
-                keyVoltages: [0, 4.9, 9.8, 14.7, 16]
+                keyVoltages: [4.9, 9.8, 14.7],
+                currentMultiplier: 25,
+                currentRandomness: 5,
+                dropFactor: 3
             },
             neon: {
                 excitationEnergy: 18.7, // eV
@@ -488,7 +487,10 @@
                 maxVoltage: 60,
                 maxCurrent: 500,
                 color: '#2196F3',
-                keyVoltages: [0, 18.7, 37.4, 56.1, 60]
+                keyVoltages: [18.7, 37.4, 56.1],
+                currentMultiplier: 15,
+                currentRandomness: 8,
+                dropFactor: 2
             }
         };
 
@@ -570,9 +572,7 @@
             
             updateDisplay();
             franckHertzGraph.resetSimulation();
-            
-            // Actualizar el rango del slider según el gas actual
-            updateVoltageRange();
+            updateGasButtonsState();
         }
 
         function toggleAutoSweep() {
@@ -625,6 +625,7 @@
             document.getElementById('autoSweepBtn').classList.remove('active');
             
             document.getElementById('voltageRange').disabled = false;
+            updateGasButtonsState();
         }
 
         function handleSliderChange(value) {
@@ -677,32 +678,36 @@
             }
 
             const effectiveVoltage = voltage - getCurrentGasProperty('stoppingPotential');
-            let current = effectiveVoltage * (currentGas === 'mercury' ? 25 : 15);
+            let current = effectiveVoltage * getCurrentGasProperty('currentMultiplier');
 
             const excitationEnergy = getCurrentGasProperty('excitationEnergy');
             
+            // Aplicar caídas en los puntos de excitación
             for (let n = 1; n <= 3; n++) {
                 const excitationVoltage = n * excitationEnergy;
                 const distance = effectiveVoltage - excitationVoltage;
                 
                 if (effectiveVoltage > excitationVoltage - 1 && effectiveVoltage < excitationVoltage + 1) {
-                    const dropFactor = Math.exp(-Math.pow(distance * (currentGas === 'mercury' ? 3 : 2), 2));
+                    const dropFactor = Math.exp(-Math.pow(distance * getCurrentGasProperty('dropFactor'), 2));
                     current *= (0.2 + 0.8 * (1 - dropFactor));
                 }
             }
 
+            // Añadir efecto de sierra para la curva entre caídas
             const fractionalPart = (effectiveVoltage % excitationEnergy) / excitationEnergy;
             const sawtoothFactor = 0.3 + 0.7 * fractionalPart;
             current *= sawtoothFactor;
 
-            current += (Math.random() - 0.5) * (currentGas === 'mercury' ? 5 : 8);
+            // Añadir algo de aleatoriedad
+            current += (Math.random() - 0.5) * getCurrentGasProperty('currentRandomness');
             currentMeasurement = Math.max(0, current);
             updateCurrentDisplay();
         }
 
         function updateCurrentDisplay() {
             if (voltage > getCurrentGasProperty('stoppingPotential')) {
-                document.getElementById('currentDisplay').textContent = `Corriente: ${Math.round(currentMeasurement)} ${currentGas === 'mercury' ? 'µA' : 'mA'}`;
+                document.getElementById('currentDisplay').textContent = 
+                    `Corriente: ${Math.round(currentMeasurement)} ${currentGas === 'mercury' ? 'µA' : 'mA'}`;
             }
         }
 
@@ -763,9 +768,7 @@
         // Funciones para manejar el cambio de gas
         // =============================================
         function switchGas(newGas) {
-            if (isRunning || autoSweepActive) {
-                return; // No permitir cambiar de gas si la simulación está en curso
-            }
+            if (isRunning || autoSweepActive) return;
             
             currentGas = newGas;
             resetSimulation();
@@ -794,6 +797,12 @@
             updateDisplay();
         }
 
+        function updateGasButtonsState() {
+            const canChangeGas = !isRunning && !autoSweepActive;
+            document.getElementById('mercuryBtn').disabled = !canChangeGas;
+            document.getElementById('neonBtn').disabled = !canChangeGas;
+        }
+
         // =============================================
         // Implementación del gráfico Franck-Hertz
         // =============================================
@@ -805,7 +814,7 @@
                 this.currentGas = 'mercury';
                 this.updateGasProperties();
                 
-                // Ajustar tamaño del canvas para aprovechar el nuevo espacio
+                // Ajustar tamaño del canvas
                 this.adjustCanvasSize();
                 window.addEventListener('resize', () => this.adjustCanvasSize());
                 
@@ -823,7 +832,6 @@
             },
             
             adjustCanvasSize: function() {
-                // Usar el tamaño completo del contenedor padre
                 const container = this.canvas.parentElement;
                 this.canvas.width = container.clientWidth;
                 this.canvas.height = container.clientHeight;
@@ -840,8 +848,10 @@
             },
             
             updateGraph: function(V, I) {
-                const exists = this.recordedPoints.some(point => Math.abs(point.V - V) < 0.1);
-                if (exists) return;
+                // Solo agregar puntos si el voltaje está aumentando
+                if (this.recordedPoints.length > 0 && V < this.recordedPoints[this.recordedPoints.length - 1].V) {
+                    return;
+                }
                 
                 this.recordedPoints.push({ V, I });
                 
@@ -980,15 +990,28 @@
                 
                 this.ctx.stroke();
                 
-                // Dibujar puntos clave
+                // Dibujar puntos clave en los máximos locales
                 this.ctx.fillStyle = '#ff7a00';
                 this.ctx.strokeStyle = '#fff';
                 this.ctx.lineWidth = 2;
                 
-                for (const point of this.recordedPoints) {
-                    if (this.keyVoltages.some(v => Math.abs(v - point.V) < 0.1)) {
-                        const x = margin.left + (point.V / this.maxVoltage) * graphWidth;
-                        const y = margin.top + graphHeight - (point.I / this.maxCurrent) * graphHeight;
+                // Encontrar máximos locales cerca de los voltajes clave
+                for (const keyVoltage of this.keyVoltages) {
+                    // Buscar el punto más alto en un rango alrededor del voltaje clave
+                    let maxPoint = null;
+                    let maxCurrent = 0;
+                    const range = this.currentGas === 'mercury' ? 0.5 : 2;
+                    
+                    for (const point of this.recordedPoints) {
+                        if (Math.abs(point.V - keyVoltage) < range && point.I > maxCurrent) {
+                            maxCurrent = point.I;
+                            maxPoint = point;
+                        }
+                    }
+                    
+                    if (maxPoint) {
+                        const x = margin.left + (maxPoint.V / this.maxVoltage) * graphWidth;
+                        const y = margin.top + graphHeight - (maxPoint.I / this.maxCurrent) * graphHeight;
                         
                         this.ctx.beginPath();
                         this.ctx.arc(x, y, 5, 0, Math.PI * 2);
@@ -996,17 +1019,15 @@
                         this.ctx.stroke();
                         
                         // Etiquetar puntos clave
-                        if (point.V > 0 && point.V < this.maxVoltage) {
-                            this.ctx.fillStyle = '#333';
-                            this.ctx.textAlign = 'center';
-                            this.ctx.font = 'bold 12px Arial';
-                            
-                            let labelY = y - 15;
-                            if (point.V === this.keyVoltages[2]) labelY = y - 25;
-                            
-                            this.ctx.fillText(`${point.V.toFixed(1)} V`, x, labelY);
-                            this.ctx.fillStyle = '#ff7a00';
-                        }
+                        this.ctx.fillStyle = '#333';
+                        this.ctx.textAlign = 'center';
+                        this.ctx.font = 'bold 12px Arial';
+                        
+                        let labelY = y - 15;
+                        if (maxPoint.V === this.keyVoltages[1]) labelY = y - 25;
+                        
+                        this.ctx.fillText(`${maxPoint.V.toFixed(1)} V`, x, labelY);
+                        this.ctx.fillStyle = '#ff7a00';
                     }
                 }
             }
@@ -1021,31 +1042,18 @@
             
             // Configurar botones de gas
             document.getElementById('mercuryBtn').addEventListener('click', function() {
-                if (!isRunning && !autoSweepActive) {
-                    switchGas('mercury');
-                }
+                switchGas('mercury');
             });
             
             document.getElementById('neonBtn').addEventListener('click', function() {
-                if (!isRunning && !autoSweepActive) {
-                    switchGas('neon');
-                }
+                switchGas('neon');
             });
             
-            // Actualizar estado de los botones de gas
-            function updateGasButtonsState() {
-                const canChangeGas = !isRunning && !autoSweepActive;
-                document.getElementById('mercuryBtn').disabled = !canChangeGas;
-                document.getElementById('neonBtn').disabled = !canChangeGas;
-            }
-            
-            // Observar cambios en el estado de la simulación
-            setInterval(updateGasButtonsState, 100);
+            // Actualizar estado inicial de los botones
+            updateGasButtonsState();
             
             updateDisplay();
         };
     </script>
-
-  
 </body>
 </html>
