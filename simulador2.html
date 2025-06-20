@@ -875,30 +875,39 @@
         
                 this.ctx.stroke();
         
-                // Puntos clave y etiquetas
+                // Dibujar puntos clave y etiquetas
                 this.ctx.fillStyle = '#ff7a00';
                 this.ctx.strokeStyle = '#fff';
                 this.ctx.lineWidth = 2;
-        
+                
                 const keyVoltages = [4.9, 9.8, 14.7];
+                const shownLabels = new Set();
+                
                 for (const point of this.recordedPoints) {
+                    // Redondeo para mejorar coincidencia
                     const roundedV = Math.round(point.V * 10) / 10;
-                    if (keyVoltages.includes(roundedV)) {
+                
+                    if (keyVoltages.includes(roundedV) && !shownLabels.has(roundedV)) {
                         const x = margin.left + (point.V / this.maxVoltage) * graphWidth;
                         const y = margin.top + graphHeight - (point.I / this.maxCurrent) * graphHeight;
-        
+                
+                        // Punto naranja
                         this.ctx.beginPath();
                         this.ctx.arc(x, y, 5, 0, Math.PI * 2);
                         this.ctx.fill();
                         this.ctx.stroke();
-        
+                
+                        // Etiqueta encima
                         this.ctx.fillStyle = '#333';
                         this.ctx.textAlign = 'center';
                         this.ctx.font = 'bold 12px Arial';
-                        this.ctx.fillText(`${roundedV} V`, x, y - 20);
+                        this.ctx.fillText(`${roundedV} V`, x, y - 25);  // -25 para más separación
+                
                         this.ctx.fillStyle = '#ff7a00';
+                        shownLabels.add(roundedV); // evita repetir etiquetas
                     }
                 }
+
             }
         };
 
