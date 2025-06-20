@@ -619,28 +619,33 @@
         
             const effectiveVoltage = voltage - STOPPING_POTENTIAL;
         
-            // Base lineal de corriente
-            let current = effectiveVoltage * 20;
+            // Corriente base lineal creciente
+            let current = effectiveVoltage * 25;
         
-            // Generar picos en múltiplos de la energía de excitación (4.9, 9.8, 14.7)
-            const peakPositions = [4.9, 9.8, 14.7];
-            let peakBoost = 1;
-        
-            for (let peak of peakPositions) {
-                const distance = Math.abs(effectiveVoltage - peak);
-                if (distance < 0.4) {
-                    peakBoost += 2.5 * Math.exp(-Math.pow(distance * 5, 2));
+            // Generar valles cerca de 4.9, 9.8, 14.7 V
+            const excitationEnergy = 4.9;
+            for (let n = 1; n <= 3; n++) {
+                const target = n * excitationEnergy;
+                const distance = effectiveVoltage - target;
+                
+                if (Math.abs(distance) < 0.6) {
+                    const drop = Math.exp(-Math.pow(distance * 4, 2)); // curva gaussiana centrada en el valle
+                    current *= (0.2 + 0.8 * (1 - drop)); // caída pronunciada cerca del valle
                 }
             }
         
-            current *= peakBoost;
+            // Oscilación de diente de sierra entre valles (opcional, para apariencia)
+            const fractionalPart = (effectiveVoltage % excitationEnergy) / excitationEnergy;
+            const sawtooth = 0.4 + 0.6 * fractionalPart;
+            current *= sawtooth;
         
-            // Agregar un pequeño ruido para que se vea más natural
-            current += (Math.random() - 0.5) * 4;
+            // Ruido natural
+            current += (Math.random() - 0.5) * 5;
         
             currentMeasurement = Math.max(0, current);
             updateCurrentDisplay();
         }
+
 
         function updateCurrentDisplay() {
             if (voltage > STOPPING_POTENTIAL) {
