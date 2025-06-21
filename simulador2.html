@@ -453,7 +453,7 @@
             
             tube.appendChild(electron);
             
-            const effectiveVoltage = voltage - 1.5;
+            const effectiveVoltage = voltage - 1;
             const kineticEnergy = effectiveVoltage;
             const baseSpeed = Math.sqrt(Math.max(kineticEnergy, 0.1)) * 1.2;
             
@@ -613,7 +613,7 @@
                 return;
             }
 
-            const effectiveVoltage = voltage - 1.5;
+            const effectiveVoltage = voltage - 1;
             let current = effectiveVoltage * 25;
 
             const excitationEnergy = 4.9;
