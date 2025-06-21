@@ -880,7 +880,7 @@
                     const curr = this.recordedPoints[i];
                     const next = this.recordedPoints[i + 1];
             
-                    if (curr.I > prev.I && curr.I > next.I) {
+                    if (curr.I > prev.I && curr.I > next.I && curr.V >= 2) {
                         const x = margin.left + (curr.V / this.maxVoltage) * graphWidth;
                         const y = margin.top + graphHeight - (curr.I / this.maxCurrent) * graphHeight;
             
