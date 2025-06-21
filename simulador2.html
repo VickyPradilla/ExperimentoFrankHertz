@@ -189,7 +189,6 @@
             padding: 15px;
             border-radius: 15px;
             margin-top: 15px;
-            /* Añade estas propiedades */
             min-width: 200px;
             text-align: center;
         }
@@ -199,7 +198,6 @@
             font-weight: bold;
             color: #2c5aa0;
             margin: 5px 0;
-            /* Añade esta propiedad para manejar texto largo */
             word-break: keep-all;
         }
 
@@ -251,9 +249,32 @@
             transition: background 0.3s;
             min-width: 160px;
         }
+        .nav-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(30, 64, 175, 0.3);
+            color: black;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-decoration: none;
+            text-align: center;
+            z-index: 1000;
+        }
+
+        .nav-button:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
 
         button:hover {
-            background: #2c5aa0f;
+            background: #2c5aa0;
         }
 
         button:disabled {
@@ -286,10 +307,10 @@
             background: white;
             border-radius: 20px;
             padding: 20px;
-            
             width: 600px;
             height: 450px;
             box-sizing: border-box;
+            margin-left: 40px;
         }
 
         .graph-title {
@@ -335,6 +356,7 @@
     </style>
 </head>
 <body>
+    <a href="index.html" class="nav-button">Volver al Inicio</a>
     <div class="container">
         <h1>Experimento de Franck-Hertz</h1>
         <p style="color: #2c5aa0; font-weight: bold;">Demostración de la cuantización de energía atómica</p>
@@ -357,7 +379,7 @@
 
                     <div class="slider-section">
                         <div class="slider-label">Control Manual de Voltaje</div>
-                        <input type="range" class="voltage-slider" id="voltageRange" min="0" max="16" value="0" step="0.1" oninput="handleSliderChange(this.value)">
+                        <input type="range" class="voltage-slider" id="voltageRange" min="0" max="16" value="0" step="0.1">
                         <div class="voltage-display" id="voltageDisplay">0,0 V</div>
                     </div>
 
@@ -388,10 +410,8 @@
     </div>
 
     <div class="controls">
-        <button onclick="startSimulation()" id="startBtn">Iniciar</button>
-        <button onclick="stopSimulation()" id="stopBtn" disabled>Detener</button>
-        <button onclick="resetSimulation()" id="resetBtn">Reiniciar</button>
-        <button onclick="toggleAutoSweep()" id="autoSweepBtn" class="auto-sweep-btn">Barrido Automático</button>
+        <button id="resetBtn">Reiniciar</button>
+        <button id="autoSweepBtn" class="auto-sweep-btn">Barrido Automático</button>
         <button onclick="window.location.href='quiz.html'" class="quiz-btn">Tomar Quiz</button>
     </div>
 
@@ -408,6 +428,7 @@
         let autoSweepActive = false;
         let autoSweepInterval = null;
         let franckHertzGraph;
+        let animationFrameId = null;
 
         // Constantes del experimento
         const MERCURY_EXCITATION_ENERGY = 4.9; // eV
@@ -427,8 +448,8 @@
             const startX = 40;
             const startY = 25 + (Math.random() - 0.5) * 10;
             
-            electron.style.left = startX + 'px';
-            electron.style.top = startY + 'px';
+            electron.style.left = `${startX}px`;
+            electron.style.top = `${startY}px`;
             
             tube.appendChild(electron);
             
@@ -451,8 +472,8 @@
             const tube = document.getElementById('tube');
             const atom = document.createElement('div');
             atom.className = 'excited-atom';
-            atom.style.left = x + 'px';
-            atom.style.top = y + 'px';
+            atom.style.left = `${x}px`;
+            atom.style.top = `${y}px`;
             tube.appendChild(atom);
             
             setTimeout(() => {
@@ -464,16 +485,8 @@
 
         function startSimulation() {
             isRunning = true;
-            document.getElementById('startBtn').disabled = true;
-            document.getElementById('stopBtn').disabled = false;
             animateElectrons();
             createElectronsPeriodically();
-        }
-
-        function stopSimulation() {
-            isRunning = false;
-            document.getElementById('startBtn').disabled = false;
-            document.getElementById('stopBtn').disabled = true;
         }
 
         function resetSimulation() {
@@ -481,28 +494,39 @@
                 stopAutoSweep();
             }
             
-            isRunning = false;
-            document.getElementById('startBtn').disabled = false;
-            document.getElementById('stopBtn').disabled = true;
+            // Cancelar la animación si está en curso
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
             
+            isRunning = false;
             const tube = document.getElementById('tube');
             
-            electrons.forEach(electron => {
-                if (electron.element.parentNode) {
-                    tube.removeChild(electron.element);
+            // Limpiar electrones de manera más segura
+            const electronsToRemove = [...electrons];
+            electrons = [];
+            electronId = 0;
+            
+            electronsToRemove.forEach(electron => {
+                if (electron.element && electron.element.parentNode) {
+                    electron.element.parentNode.removeChild(electron.element);
                 }
             });
             
-            electrons = [];
-            electronId = 0;
+            // Resetear variables de estado
             currentMeasurement = 0;
             voltage = 0;
             maxVoltageReached = 0;
             
+            // Actualizar UI
             document.getElementById('voltageRange').value = 0;
-            
             updateDisplay();
-            franckHertzGraph.resetSimulation();
+            
+            // Resetear gráfico
+            if (franckHertzGraph) {
+                franckHertzGraph.resetSimulation();
+            }
         }
 
         function toggleAutoSweep() {
@@ -521,8 +545,6 @@
             document.getElementById('autoSweepBtn').classList.add('active');
             
             document.getElementById('voltageRange').disabled = true;
-            document.getElementById('startBtn').disabled = true;
-            document.getElementById('resetBtn').disabled = true;
             
             startSimulation();
             
@@ -557,29 +579,24 @@
             document.getElementById('autoSweepBtn').classList.remove('active');
             
             document.getElementById('voltageRange').disabled = false;
-            document.getElementById('startBtn').disabled = false;
-            document.getElementById('resetBtn').disabled = false;
         }
 
         function handleSliderChange(value) {
             if (autoSweepActive) return;
             
             const newVoltage = parseFloat(value);
+            voltage = newVoltage;
+            maxVoltageReached = Math.max(maxVoltageReached, newVoltage);
             
-            if (newVoltage >= maxVoltageReached) {
-                maxVoltageReached = newVoltage;
-                voltage = newVoltage;
-                
-                if (!isRunning && voltage > 0) {
-                    startSimulation();
-                }
-                
-                updateDisplay();
-                calculateFranckHertzCurrent();
-                franckHertzGraph.updateGraph(voltage, currentMeasurement);
-            } else {
-                document.getElementById('voltageRange').value = maxVoltageReached;
+            if (!isRunning && voltage > STOPPING_POTENTIAL) {
+                startSimulation();
+            } else if (voltage <= STOPPING_POTENTIAL) {
+                isRunning = false;
             }
+            
+            updateDisplay();
+            calculateFranckHertzCurrent();
+            franckHertzGraph.updateGraph(voltage, currentMeasurement);
         }
 
         function updateDisplay() {
@@ -639,53 +656,73 @@
         function createElectronsPeriodically() {
             if (!isRunning) return;
             
-            createElectron();
+            if (voltage > STOPPING_POTENTIAL) {
+                createElectron();
+            }
             
-            const interval = voltage > STOPPING_POTENTIAL ? Math.max(150, 400 - voltage * 15) : 1000;
+            // Intervalo más dinámico basado en el voltaje
+            const baseInterval = 400;
+            const voltageFactor = Math.max(0, voltage - STOPPING_POTENTIAL);
+            const interval = voltage > STOPPING_POTENTIAL 
+                ? Math.max(100, baseInterval - voltageFactor * 20) 
+                : 1000;
+            
             setTimeout(createElectronsPeriodically, interval);
         }
 
         function animateElectrons() {
-            if (!isRunning) return;
+            if (!isRunning) {
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
+                return;
+            }
 
-            electrons.forEach((electron, index) => {
-                if (voltage > STOPPING_POTENTIAL) {
+            // Filtrado más eficiente de electrones
+            electrons = electrons.filter(electron => {
+                if (electron.x > 470) {
+                    if (electron.element.parentNode) {
+                        electron.element.parentNode.removeChild(electron.element);
+                    }
+                    return false;
+                }
+                return true;
+            });
+
+            // Movimiento de electrones con optimización
+            const effectiveVoltage = voltage - STOPPING_POTENTIAL;
+            const shouldMove = voltage > STOPPING_POTENTIAL;
+            
+            electrons.forEach(electron => {
+                if (shouldMove) {
                     electron.x += electron.vx;
                     electron.y += electron.vy;
                     
-                    if (electron.y < 35) {
-                        electron.y = 35;
-                        electron.vy = Math.abs(electron.vy);
-                    }
-                    if (electron.y > 85) {
-                        electron.y = 85;
-                        electron.vy = -Math.abs(electron.vy);
+                    // Rebote en los bordes
+                    if (electron.y < 35 || electron.y > 85) {
+                        electron.y = Math.max(35, Math.min(85, electron.y));
+                        electron.vy = -electron.vy;
                     }
                     
-                    if (!electron.hasExcited && electron.energy >= MERCURY_EXCITATION_ENERGY) {
-                        if (Math.random() < 0.015) {
-                            electron.hasExcited = true;
-                            electron.energy -= MERCURY_EXCITATION_ENERGY;
-                            electron.vx *= 0.3;
-                            
-                            createExcitedAtom(electron.x, electron.y);
-                            electron.element.style.background = '#ff6b35';
-                        }
+                    // Excitación de átomos
+                    if (!electron.hasExcited && electron.energy >= MERCURY_EXCITATION_ENERGY && 
+                        Math.random() < 0.015) {
+                        electron.hasExcited = true;
+                        electron.energy -= MERCURY_EXCITATION_ENERGY;
+                        electron.vx *= 0.3;
+                        
+                        createExcitedAtom(electron.x, electron.y);
+                        electron.element.style.background = '#ff6b35';
                     }
                     
-                    electron.element.style.left = electron.x + 'px';
-                    electron.element.style.top = electron.y + 'px';
-                    
-                    if (electron.x > 470) {
-                        if (electron.element.parentNode) {
-                            electron.element.parentNode.removeChild(electron.element);
-                        }
-                        electrons.splice(index, 1);
-                    }
+                    // Actualización posición
+                    electron.element.style.left = `${electron.x}px`;
+                    electron.element.style.top = `${electron.y}px`;
                 }
             });
 
-            requestAnimationFrame(animateElectrons);
+            animationFrameId = requestAnimationFrame(animateElectrons);
         }
 
         // =============================================
@@ -694,27 +731,33 @@
         const FranckHertzGraph = {
             init: function(canvasId) {
                 this.canvas = document.getElementById(canvasId);
+                if (!this.canvas) return;
+                
                 this.ctx = this.canvas.getContext('2d');
                 this.recordedPoints = [];
                 this.maxVoltage = 16;
                 this.maxCurrent = 320;
                 
-                // Ajustar tamaño del canvas para aprovechar el nuevo espacio
-                this.adjustCanvasSize();
-                window.addEventListener('resize', () => this.adjustCanvasSize());
+                this.resizeCanvas();
+                window.addEventListener('resize', () => this.resizeCanvas(), { passive: true });
                 
                 this.drawAxes();
             },
             
-            adjustCanvasSize: function() {
-                // Usar el tamaño completo del contenedor padre
-                const container = this.canvas.parentElement;
-                this.canvas.width = container.clientWidth;
-                this.canvas.height = container.clientHeight;
+            resizeCanvas: function() {
+                if (!this.canvas || !this.canvas.parentElement) return;
                 
-                if(this.recordedPoints.length > 0) {
+                const container = this.canvas.parentElement;
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+                
+                if (this.canvas.width !== width || this.canvas.height !== height) {
+                    this.canvas.width = width;
+                    this.canvas.height = height;
                     this.drawAxes();
-                    this.drawSmoothGraph();
+                    if (this.recordedPoints.length > 0) {
+                        this.drawSmoothGraph();
+                    }
                 }
             },
             
@@ -804,7 +847,7 @@
                 this.ctx.fillText('Voltaje (V)', margin.left + graphWidth / 2, margin.top + graphHeight + 40);
                 
                 this.ctx.save();
-                this.ctx.translate(margin.left - 50, margin.top + graphHeight / 2);
+                this.ctx.translate(margin.left -52, margin.top + graphHeight / 2);
                 this.ctx.rotate(-Math.PI / 2);
                 this.ctx.fillText('Corriente (µA)', 0, 0);
                 this.ctx.restore();
@@ -901,13 +944,15 @@
             franckHertzGraph.init('franckHertzGraph');
             
             updateDisplay();
+            
+            // Configurar event listeners
+            document.getElementById('voltageRange').addEventListener('input', function() {
+                handleSliderChange(this.value);
+            });
+            
+            document.getElementById('resetBtn').addEventListener('click', resetSimulation);
+            document.getElementById('autoSweepBtn').addEventListener('click', toggleAutoSweep);
         };
     </script>
-
-        <!-- Botones de navegación -->
-    <div class="buttons">
-      <a href="index.html" class="nav-button">Volver</a>
-  
-
 </body>
 </html>
