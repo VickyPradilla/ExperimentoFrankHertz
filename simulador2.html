@@ -446,7 +446,7 @@
             electron.id = `electron-${electronId++}`;
             
             const startX = 40;
-            const startY = 25 + (Math.random() - 1.5) * 10;
+            const startY = 25 + (Math.random() - 0.5) * 10;
             
             electron.style.left = startX + 'px';
             electron.style.top = startY + 'px';
@@ -613,7 +613,7 @@
                 return;
             }
 
-            const effectiveVoltage = voltage - 0.5;
+            const effectiveVoltage = voltage - 1.5;
             let current = effectiveVoltage * 25;
 
             const excitationEnergy = 4.9;
