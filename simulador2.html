@@ -456,7 +456,7 @@
             
             tube.appendChild(electron);
             
-            const effectiveVoltage = voltage - STOPPING_POTENTIAL;
+            const effectiveVoltage = voltage;
             const kineticEnergy = effectiveVoltage;
             const baseSpeed = Math.sqrt(Math.max(kineticEnergy, 0.1)) * 1.2;
             
@@ -834,97 +834,72 @@
                 this.ctx.fillText('1.5 V', stoppingX - 15, margin.top + graphHeight + 40);
             },
             
-            drawSmoothGraph: function () {
-                if (this.recordedPoints.length < 3) return;
-            
+            drawSmoothGraph: function() {
+                if (this.recordedPoints.length < 2) return;
+                
                 const margin = { left: 60, top: 30, right: 40, bottom: 50 };
                 const graphWidth = this.canvas.width - margin.left - margin.right;
                 const graphHeight = this.canvas.height - margin.top - margin.bottom;
-            
-                // Ordenar puntos por voltaje
+                
                 this.recordedPoints.sort((a, b) => a.V - b.V);
-            
-                // Suavizar con media móvil
-                const smoothed = [];
-                const windowSize = 3;
-            
-                for (let i = 0; i < this.recordedPoints.length; i++) {
-                    let sumV = 0, sumI = 0, count = 0;
-                    for (let j = -1; j <= 1; j++) {
-                        const idx = i + j;
-                        if (idx >= 0 && idx < this.recordedPoints.length) {
-                            sumV += this.recordedPoints[idx].V;
-                            sumI += this.recordedPoints[idx].I;
-                            count++;
-                        }
-                    }
-                    smoothed.push({
-                        V: sumV / count,
-                        I: sumI / count
-                    });
-                }
-            
-                // Dibujar curva suavizada
+                
+                // Dibujar línea suave
                 this.ctx.strokeStyle = '#2c7be5';
                 this.ctx.lineWidth = 3;
                 this.ctx.beginPath();
-            
-                for (let i = 0; i < smoothed.length - 1; i++) {
-                    const p0 = smoothed[i];
-                    const p1 = smoothed[i + 1];
-            
-                    const x0 = margin.left + (p0.V / this.maxVoltage) * graphWidth;
-                    const y0 = margin.top + graphHeight - (p0.I / this.maxCurrent) * graphHeight;
-            
-                    const x1 = margin.left + (p1.V / this.maxVoltage) * graphWidth;
-                    const y1 = margin.top + graphHeight - (p1.I / this.maxCurrent) * graphHeight;
-            
+                
+                const firstPoint = this.recordedPoints[0];
+                const firstX = margin.left + (firstPoint.V / this.maxVoltage) * graphWidth;
+                const firstY = margin.top + graphHeight - (firstPoint.I / this.maxCurrent) * graphHeight;
+                this.ctx.moveTo(firstX, firstY);
+                
+                for (let i = 1; i < this.recordedPoints.length; i++) {
+                    const prevPoint = this.recordedPoints[i-1];
+                    const point = this.recordedPoints[i];
+                    
+                    const x0 = margin.left + (prevPoint.V / this.maxVoltage) * graphWidth;
+                    const y0 = margin.top + graphHeight - (prevPoint.I / this.maxCurrent) * graphHeight;
+                    const x1 = margin.left + (point.V / this.maxVoltage) * graphWidth;
+                    const y1 = margin.top + graphHeight - (point.I / this.maxCurrent) * graphHeight;
+                    
                     const cpx = (x0 + x1) / 2;
                     const cpy = (y0 + y1) / 2;
-            
-                    if (i === 0) this.ctx.moveTo(x0, y0);
+                    
                     this.ctx.quadraticCurveTo(cpx, cpy, x1, y1);
                 }
-            
+                
                 this.ctx.stroke();
-            
-                // ===============================
-                // Dibujar puntos naranjas en 4.9, 9.8 y 14.7 como antes
-                // ===============================
+                
+                // Dibujar puntos clave
                 this.ctx.fillStyle = '#ff7a00';
                 this.ctx.strokeStyle = '#fff';
                 this.ctx.lineWidth = 2;
-                this.ctx.font = 'bold 12px Arial';
-                this.ctx.textAlign = 'center';
-            
-                const targetVoltages = [4.9, 9.8, 14.7];
-                const tolerance = 0.3;
-            
-                for (const targetV of targetVoltages) {
-                    let maxPoint = null;
-                    for (const p of this.recordedPoints) {
-                        if (Math.abs(p.V - targetV) <= tolerance) {
-                            if (!maxPoint || p.I > maxPoint.I) {
-                                maxPoint = p;
-                            }
-                        }
-                    }
-            
-                    if (maxPoint) {
-                        const x = margin.left + (maxPoint.V / this.maxVoltage) * graphWidth;
-                        const y = margin.top + graphHeight - (maxPoint.I / this.maxCurrent) * graphHeight;
-            
+                
+                const keyVoltages = [0, 4.9, 9.8, 14.7, 16];
+                for (const point of this.recordedPoints) {
+                    if (keyVoltages.some(v => Math.abs(v - point.V) < 0.1)) {
+                        const x = margin.left + (point.V / this.maxVoltage) * graphWidth;
+                        const y = margin.top + graphHeight - (point.I / this.maxCurrent) * graphHeight;
+                        
                         this.ctx.beginPath();
                         this.ctx.arc(x, y, 5, 0, Math.PI * 2);
                         this.ctx.fill();
                         this.ctx.stroke();
-            
-                        this.ctx.fillStyle = '#333';
-                        this.ctx.fillText(`${maxPoint.V.toFixed(1)} V`, x, y - 15);
-                        this.ctx.fillStyle = '#ff7a00';
+                        
+                        // Etiquetar puntos clave
+                        if (point.V === 4.9 || point.V === 9.8 || point.V === 14.7) {
+                            this.ctx.fillStyle = '#333';
+                            this.ctx.textAlign = 'center';
+                            this.ctx.font = 'bold 12px Arial';
+                            
+                            let labelY = y - 15;
+                            if (point.V === 9.8) labelY = y - 25;
+                            
+                            this.ctx.fillText(`${point.V} V`, x, labelY);
+                            this.ctx.fillStyle = '#ff7a00';
+                        }
                     }
                 }
-
             }
         };
 
@@ -939,6 +914,6 @@
         };
     </script>
 
-
+      
 </body>
 </html>
