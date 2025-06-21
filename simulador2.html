@@ -255,8 +255,8 @@
             position: absolute;
             top: 20px;
             right: 20px;
-            background-color: rgba(30, 64, 175, 0.3);
-            color: black;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
             border: none;
             padding: 12px 24px;
             border-radius: 50px;
@@ -310,11 +310,10 @@
             background: white;
             border-radius: 20px;
             padding: 20px;
+            
             width: 600px;
             height: 450px;
             box-sizing: border-box;
-            margin-left: 40px;
-
         }
 
         .graph-title {
@@ -414,6 +413,8 @@
     </div>
 
     <div class="controls">
+        <button onclick="startSimulation()" id="startBtn">Iniciar</button>
+        <button onclick="stopSimulation()" id="stopBtn" disabled>Detener</button>
         <button onclick="resetSimulation()" id="resetBtn">Reiniciar</button>
         <button onclick="toggleAutoSweep()" id="autoSweepBtn" class="auto-sweep-btn">Barrido Automático</button>
         <button onclick="window.location.href='quiz.html'" class="quiz-btn">Tomar Quiz</button>
@@ -488,8 +489,16 @@
 
         function startSimulation() {
             isRunning = true;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
             animateElectrons();
             createElectronsPeriodically();
+        }
+
+        function stopSimulation() {
+            isRunning = false;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
         }
 
         function resetSimulation() {
@@ -497,6 +506,9 @@
                 stopAutoSweep();
             }
             
+            isRunning = false;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
             
             const tube = document.getElementById('tube');
             
@@ -534,6 +546,8 @@
             document.getElementById('autoSweepBtn').classList.add('active');
             
             document.getElementById('voltageRange').disabled = true;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('resetBtn').disabled = true;
             
             startSimulation();
             
@@ -568,7 +582,8 @@
             document.getElementById('autoSweepBtn').classList.remove('active');
             
             document.getElementById('voltageRange').disabled = false;
-            
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('resetBtn').disabled = false;
         }
 
         function handleSliderChange(value) {
@@ -609,43 +624,36 @@
             }
         }
 
-
         function calculateFranckHertzCurrent() {
             if (voltage <= STOPPING_POTENTIAL) {
                 currentMeasurement = 0;
                 updateCurrentDisplay();
                 return;
             }
-        
+
             const effectiveVoltage = voltage - STOPPING_POTENTIAL;
-        
-            // Corriente base lineal creciente
             let current = effectiveVoltage * 25;
-        
-            // Generar valles cerca de 4.9, 9.8, 14.7 V
+
             const excitationEnergy = 4.9;
-            for (let n = 1; n <= 3; n++) {
-                const target = n * excitationEnergy;
-                const distance = effectiveVoltage - target;
+            
+            for (let n = 1; n <= 4; n++) {
+                const excitationVoltage = n * excitationEnergy;
+                const distance = effectiveVoltage - excitationVoltage;
                 
-                if (Math.abs(distance) < 0.6) {
-                    const drop = Math.exp(-Math.pow(distance * 4, 2)); // curva gaussiana centrada en el valle
-                    current *= (0.2 + 0.8 * (1 - drop)); // caída pronunciada cerca del valle
+                if (effectiveVoltage > excitationVoltage - 1 && effectiveVoltage < excitationVoltage + 1) {
+                    const dropFactor = Math.exp(-Math.pow(distance * 3, 2));
+                    current *= (0.2 + 0.8 * (1 - dropFactor));
                 }
             }
-        
-            // Oscilación de diente de sierra entre valles (opcional, para apariencia)
+
             const fractionalPart = (effectiveVoltage % excitationEnergy) / excitationEnergy;
-            const sawtooth = 0.4 + 0.6 * fractionalPart;
-            current *= sawtooth;
-        
-            // Ruido natural
+            const sawtoothFactor = 0.3 + 0.7 * fractionalPart;
+            current *= sawtoothFactor;
+
             current += (Math.random() - 0.5) * 5;
-        
             currentMeasurement = Math.max(0, current);
             updateCurrentDisplay();
         }
-
 
         function updateCurrentDisplay() {
             if (voltage > STOPPING_POTENTIAL) {
@@ -751,7 +759,7 @@
             },
             
             drawAxes: function() {
-                const margin = { left: 80, top: 30, right: 20, bottom: 50 };
+                const margin = { left: 60, top: 30, right: 40, bottom: 50 };
                 const graphWidth = this.canvas.width - margin.left - margin.right;
                 const graphHeight = this.canvas.height - margin.top - margin.bottom;
                 
@@ -821,7 +829,7 @@
                 this.ctx.fillText('Voltaje (V)', margin.left + graphWidth / 2, margin.top + graphHeight + 40);
                 
                 this.ctx.save();
-                this.ctx.translate(margin.left -52, margin.top + graphHeight / 2);
+                this.ctx.translate(margin.left - 50, margin.top + graphHeight / 2);
                 this.ctx.rotate(-Math.PI / 2);
                 this.ctx.fillText('Corriente (µA)', 0, 0);
                 this.ctx.restore();
@@ -840,77 +848,75 @@
                 this.ctx.font = 'bold 12px Arial';
                 this.ctx.fillText('1.5 V', stoppingX - 15, margin.top + graphHeight + 40);
             },
+            
             drawSmoothGraph: function() {
                 if (this.recordedPoints.length < 2) return;
-        
+                
                 const margin = { left: 60, top: 30, right: 40, bottom: 50 };
                 const graphWidth = this.canvas.width - margin.left - margin.right;
                 const graphHeight = this.canvas.height - margin.top - margin.bottom;
-        
+                
                 this.recordedPoints.sort((a, b) => a.V - b.V);
-        
+                
+                // Dibujar línea suave
                 this.ctx.strokeStyle = '#2c7be5';
                 this.ctx.lineWidth = 3;
                 this.ctx.beginPath();
-        
+                
                 const firstPoint = this.recordedPoints[0];
                 const firstX = margin.left + (firstPoint.V / this.maxVoltage) * graphWidth;
                 const firstY = margin.top + graphHeight - (firstPoint.I / this.maxCurrent) * graphHeight;
                 this.ctx.moveTo(firstX, firstY);
-        
+                
                 for (let i = 1; i < this.recordedPoints.length; i++) {
-                    const prevPoint = this.recordedPoints[i - 1];
+                    const prevPoint = this.recordedPoints[i-1];
                     const point = this.recordedPoints[i];
-        
+                    
                     const x0 = margin.left + (prevPoint.V / this.maxVoltage) * graphWidth;
                     const y0 = margin.top + graphHeight - (prevPoint.I / this.maxCurrent) * graphHeight;
                     const x1 = margin.left + (point.V / this.maxVoltage) * graphWidth;
                     const y1 = margin.top + graphHeight - (point.I / this.maxCurrent) * graphHeight;
-        
+                    
                     const cpx = (x0 + x1) / 2;
                     const cpy = (y0 + y1) / 2;
-        
+                    
                     this.ctx.quadraticCurveTo(cpx, cpy, x1, y1);
                 }
-        
+                
                 this.ctx.stroke();
-        
-                // Dibujar puntos clave y etiquetas
+                
+                // Dibujar puntos clave
                 this.ctx.fillStyle = '#ff7a00';
                 this.ctx.strokeStyle = '#fff';
                 this.ctx.lineWidth = 2;
                 
-                const keyVoltages = [4.9, 9.8, 14.7];
-                const shownLabels = new Set();
-                
+                const keyVoltages = [0, 4.9, 9.8, 14.7, 16];
                 for (const point of this.recordedPoints) {
-                    // Redondeo para mejorar coincidencia
-                    const roundedV = Math.round(point.V * 10) / 10;
-                
-                    if (keyVoltages.includes(roundedV) && !shownLabels.has(roundedV)) {
+                    if (keyVoltages.some(v => Math.abs(v - point.V) < 0.1)) {
                         const x = margin.left + (point.V / this.maxVoltage) * graphWidth;
                         const y = margin.top + graphHeight - (point.I / this.maxCurrent) * graphHeight;
-                
-                        // Punto naranja
+                        
                         this.ctx.beginPath();
                         this.ctx.arc(x, y, 5, 0, Math.PI * 2);
                         this.ctx.fill();
                         this.ctx.stroke();
-                
-                        // Etiqueta encima
-                        this.ctx.fillStyle = '#333';
-                        this.ctx.textAlign = 'center';
-                        this.ctx.font = 'bold 12px Arial';
-                        this.ctx.fillText(`${roundedV} V`, x, y - 25);  // -25 para más separación
-                
-                        this.ctx.fillStyle = '#ff7a00';
-                        shownLabels.add(roundedV); // evita repetir etiquetas
+                        
+                        // Etiquetar puntos clave
+                        if (point.V === 4.9 || point.V === 9.8 || point.V === 14.7) {
+                            this.ctx.fillStyle = '#333';
+                            this.ctx.textAlign = 'center';
+                            this.ctx.font = 'bold 12px Arial';
+                            
+                            let labelY = y - 15;
+                            if (point.V === 9.8) labelY = y - 25;
+                            
+                            this.ctx.fillText(`${point.V} V`, x, labelY);
+                            this.ctx.fillStyle = '#ff7a00';
+                        }
                     }
                 }
-
             }
         };
-
 
         // =============================================
         // Inicialización
