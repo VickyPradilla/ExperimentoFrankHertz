@@ -446,14 +446,14 @@
             electron.id = `electron-${electronId++}`;
             
             const startX = 40;
-            const startY = 25 + (Math.random() - 0.5) * 10;
+            const startY = 25 + (Math.random() - 1.5) * 10;
             
             electron.style.left = startX + 'px';
             electron.style.top = startY + 'px';
             
             tube.appendChild(electron);
             
-            const effectiveVoltage = voltage - 0.5;
+            const effectiveVoltage = voltage - 1.5;
             const kineticEnergy = effectiveVoltage;
             const baseSpeed = Math.sqrt(Math.max(kineticEnergy, 0.1)) * 1.2;
             
