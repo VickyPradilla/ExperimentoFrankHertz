@@ -596,9 +596,9 @@
             document.getElementById('voltageDisplay').textContent = voltage.toFixed(1).replace('.', ',') + ' V';
             
             if (voltage > STOPPING_POTENTIAL) {
-                document.getElementById('energyDisplay').textContent = `Energía: ${(voltage - STOPPING_POTENTIAL).toFixed(1).replace('.', ',')} eV`;
+                document.getElementById('energyDisplay').textContent = `Energía: ${(voltage).toFixed(1).replace('.', ',')} eV`;
                 
-                const excitationLevel = Math.floor((voltage - STOPPING_POTENTIAL) / MERCURY_EXCITATION_ENERGY);
+                const excitationLevel = Math.floor((voltage) / MERCURY_EXCITATION_ENERGY);
                 document.getElementById('excitationLevel').textContent = `Nivel: ${excitationLevel}`;
                 
                 document.getElementById('currentInfo').style.display = 'block';
